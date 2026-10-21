@@ -1,14 +1,7 @@
-# Next steps after Phase 2
+# Remaining plan after Phase 3
 
-**Phase 2 implementation is in this repository.** It is not complete until Android builds and physical-device motion tests pass.
+- Phase 4: onboarding, scientific tracking references and reminder scheduler, real History refinements, Review dashboard and weekly analyses. Currently Reminders and Review are unfinished foundation screens.
+- Phase 5: app settings, data/privacy controls, native Android widgets and accessibility completion. Widgets are mandatory for the first release.
+- Phase 6: full build/test/benchmark pass, package-size optimization, graphics polish and release candidate.
 
-Phase 3 / Home + data:
-- Real drink log store, editing, undo, multiple drink presets and user-chosen references.
-- Replace preview fill and preview dialog action with tracked volume-to-reference mappings; never overwrite the decorative minimum floor.
-- Drag-to-reorder and resize configurable Home tiles, including accessibility fallback.
-- Maintain water scene and animated transitions when changing tabs.
-
-Do not add health claims or infer hydration percentage from the animated water.
-See `PHASE2_RELEASE_CHECKLIST.md` for acceptance tests.
-
-Phase 5 and Phase 6 include compact and large native Android **home-screen widgets in the first full release**; those are not deferred to a second product release.
+Always deliver the **complete updated repository**, retaining all earlier code, images and docs.

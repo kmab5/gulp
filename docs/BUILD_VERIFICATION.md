@@ -1,13 +1,40 @@
-# Build verification history
+# Build and verification history
 
 ## Phase 1
-Pure Kotlin tests and structure checks passed. Native Android compilation was unavailable (no SDK/Gradle/network).
+Project skeleton and navigation. Static checks and pure Kotlin assertions passed. No Android SDK in the authoring environment; native APK not compiled.
 
 ## Phase 2
-- Pure Kotlin domain/navigation smoke checks: passed.
-- Water geometry check: passed (401 assertions).
-- Static source/XML/research contract checks: passed.
-- Android APK build and device test: **not run** — Android SDK and Gradle unavailable in the packaging environment; dependency host DNS blocked.
-- CI compile + lint + debug artifact workflow included (`.github/workflows/android-ci.yml`) but has **not run** in a connected GitHub repository in this session.
+Pure Kotlin water-geometry assertions and source checks passed. Android compilation and real-device water rendering not verified.
 
-No compiled APK is bundled, and any later user-provided CI failures must be fixed before treating Phase 2 as native-build verified.
+## Phase 3 — October 20, 2026
+- [x] Pure navigation/progress checks: 10 assertions.
+- [x] Pure water math tests: 401 assertions.
+- [x] Pure date, amount and tile-codec checks: 23 assertions.
+- [x] Offline repository logic compiled against minimal Room stubs and tested: 11 assertions.
+- [x] Gradle/version TOML parsed, Android XML checked, project structure checks passed.
+- [x] ZIP archive integrity and full Phase 1+2+3 source tree checked.
+- [ ] Native Android APK build (`gradle :app:assembleDebug`) — SDK and dependency downloads unavailable here.
+- [ ] Room compiler/KSP generated-source build and Android lint — requires Gradle/SDK.
+- [ ] Connected Android Room/UI tests — requires emulator/device.
+- [ ] Real-device water shader/tilt/frame-rate/battery performance — requires physical device.
+
+**The static/offline checks cannot replace a real Android compile.** If CI or Android Studio surfaces errors, these must be fixed before calling the implementation release-ready.
+
+Run offline checks with:
+
+```
+bash tools/verify_core.sh
+bash tools/verify_water.sh
+bash tools/verify_phase3.sh
+bash tools/verify_repository_offline.sh
+python3 tools/verify_structure.py
+```
+
+Run Android checks using:
+
+```
+gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+gradle :app:connectedDebugAndroidTest
+```
+
+Reminder: inherited Phase 2 archive lacked `gradle/wrapper/gradle-wrapper.jar`; use system Gradle 8.13 or generate the wrapper on a networked development machine.

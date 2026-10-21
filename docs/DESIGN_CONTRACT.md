@@ -22,11 +22,11 @@ This contract overrides the rejected first STILLWATER concept and any conflictin
 ## Navigation responsibilities
 | Tab | Intent | Phase 1 shell | Full planned feature |
 |---|---|---|---|
-| Home | Add and track drinks | yes, preview-only | water scene, record, customizable grid |
+| Home | Add and track drinks | yes, Room + DataStore | water scene, real record, customizable grid |
 | Reminders | Manage schedule | yes, preview-only | interval, quiet hours, pause/snooze |
 | History | See/edit entries | yes, empty state | entries, calendar, correction/undo |
 | Review | Analyze logged patterns | yes, empty state | weekly/monthly charts and summaries |
-| Settings | Customize app and data | yes, preview-only | vessels, themes, accessibility, export |
+| Settings | Customize app and data | partially implemented | display scale and effects; other controls later |
 
 ## Four Rs (internal philosophy only)
 - **Ritual**: effortless, gratifying primary action.
@@ -51,3 +51,7 @@ This contract overrides the rejected first STILLWATER concept and any conflictin
 - Shader-free Compose Canvas baseline serves API 28+; on-device profiling remains required.
 - The Water preview dialog exposes fill and reduced-motion controls for testing only.
 - User's design preferences about bottom-center radial-only optional haze and no island remain binding.
+
+## Phase 3 status (2026-10-20)
+
+Home now logs real drinks with configurable quick-add tiles, and History reads and edits true Room records. The shared waterline mask and transparent navigation remain mandatory. All other feature stubs continue to identify their limitations. Refer to `PHASE3_ARCHITECTURE.md` for the database and visual-scale definitions.

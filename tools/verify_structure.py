@@ -49,6 +49,21 @@ require((root/'tools/verify_water.sh').is_file(), 'Water verification script mis
 for path in [*pkg.rglob('*.kt'), *(root/'app/src/main/res').rglob('*.xml')]:
     require('STILLWATER' not in path.read_text(), f'Retired brand in {path.name}')
 
+
+# Phase 3: source-level checks for the persistence and Home integration.
+for rel in ('core/data/GulpDatabase.kt','core/data/GulpRepository.kt',
+            'core/data/GulpPreferences.kt','core/domain/DrinkModels.kt',
+            'feature/home/DrinkEditorSheet.kt','feature/home/TileEditorSheet.kt'):
+    require((pkg / rel).exists(), f'Phase 3 file missing: {rel}')
+require('alias(libs.plugins.ksp)' in appgradle, 'KSP plugin missing for Room')
+require('implementation(libs.room.runtime)' in appgradle, 'Room runtime dependency missing')
+require('implementation(libs.datastore.preferences)' in appgradle, 'DataStore dependency missing')
+require('repository.add(' in (pkg/'MainActivity.kt').read_text(), 'Real recording not wired')
+require('DrinkRules.loggedForDay' in (pkg/'MainActivity.kt').read_text(), 'Today logged volume not wired')
+require('onLogShortcut' in (pkg/'feature/home/HomeScreen.kt').read_text(), 'Home quick add missing')
+require('repo' in (root/'docs/PHASE3_ARCHITECTURE.md').read_text().lower(), 'Phase 3 data documentation missing')
+require((root/'tools/verify_phase3.sh').exists(), 'Phase 3 smoke tests missing')
+
 if problems:
     for p in problems:
         print('FAIL:', p, file=sys.stderr)

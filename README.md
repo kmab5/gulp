@@ -1,55 +1,78 @@
-# gulp · Phase 2 — liquid interaction prototype
+# gulp — Android application (Phase 3)
 
-**Status: Phase 2 full-repo source delivery. Native build and real-device visual signoff pending.**
+**Native Kotlin / Jetpack Compose · Android 9+ · fully offline · version 0.3.0-phase3**
 
-This is the continuation of the original Phase 1 Kotlin/Jetpack Compose repo. It preserves the five-tab architecture (Home, Reminders, History, Review, Settings), full design contract, previous research and reference screenshots, tests, and CI pipeline. It now contains a real animated water renderer, shared per-pixel waterline text/icon contrast, touch ripples, gravity sensing, spring-moving selection plate, interruptible fill changes and user/system reduced-motion behavior.
+This is the complete source repository through Phase 3, including the approved design references and previous water-engine implementation. The Android APK has **not** been compiled or run in this handoff environment; we cannot claim device performance, graphics correctness or fully passing Room/KSP integration without Android Studio or an SDK-equipped CI run.
 
-**Important:** The demo water level isn't a measured hydration percentage. This milestone does **not** store drinks. All drink actions remain previews. Native widgets remain part of the **first full release** (a later implementation phase).
+## What works in the source
 
-## Requirements
-- Android Studio with Android Platform SDK **36** and Build Tools **35.0.0**.
-- JDK **17**, internet for initial dependency resolution; device API **28+**.
-- Toolchain: **Gradle 8.13**, Android Gradle Plugin **8.13.2**, Kotlin **2.2.21**, Compose BOM **2025.10.00**.
-- A phone with a gravity sensor gives the best motion experience; accelerometer or static fallback otherwise.
+- Five plain-language navigation tabs: Home, Reminders, History, Review, Settings.
+- Full-viewport water, live light/dark text masking, touch ripples and phone-tilt motion from Phase 2.
+- Home's large **Add a drink** action, a real add/edit/delete sheet and persistent Room records.
+- Types: water, coffee, tea, other; editable amount and date/time. Daily totals respect local calendar dates.
+- Quick-add tiles with chosen amount and type, adjustable widths, hold-and-drag reordering, adding and removing up to 10 tiles. Home layout persists in Preferences DataStore.
+- Undo after adding, editing and deleting the most recent drink action.
+- A configurable visual water-display capacity in Settings; changes never change the recorded amount.
+- History date selector and records for that day, with tap-to-edit/delete.
 
-## Run it
-1. Extract the archive and open the nested `gulp/` folder in Android Studio.
-2. Let Android Studio install the SDK and synchronize Gradle.
-3. Run the `app` configuration in an emulator or on a physical Android phone.
-4. Use the five tabs, tap the background, and tilt the phone. Home has a **Try water effects** test control; change the slider and toggle **Reduce motion** to check both modes.
-5. Tap **Add a drink** to trigger a **preview-only** water rise. It does *not* save anything or change the `0 mL` recorded-drinks display.
+**Not implemented yet:** actual reminder scheduling, Review analytics, onboarding, export and Android launcher widgets. Widgets are in scope for the first full release. Placeholder screens do not claim that their functions work.
 
-CLI:
+## How to run
+
+1. Install Android Studio with Android SDK API 36 and a Java 17 toolchain.
+2. Open this `gulp` directory, let Gradle synchronize, and select the `app` run configuration.
+3. Build with **Gradle 8.13** using Android Studio or an installed Gradle executable:
+
+```bash
+gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-./gradlew :app:connectedDebugAndroidTest # requires connected device
+
+4. Install the debug build on a phone or Android emulator. For the instrumented Room and UI tests run:
+
+```bash
+gradle :app:connectedDebugAndroidTest
 ```
-Windows: `gradlew.bat`. Debug APK (after a successful build): `app/build/outputs/apk/debug/app-debug.apk`.
 
-The repository wrapper bootstrap downloads the official `gradle-wrapper.jar` from Gradle's tag `v8.13.0` and verifies its pinned Git blob hash before running the standard wrapper. This is a stopgap because the original foundation was produced in a sandbox without a standard wrapper binary. CI bypasses wrapper bootstrap by installing Gradle 8.13 via `gradle/actions/setup-gradle`.
+5. Test using `docs/PHASE3_DEVICE_TEST.md`. A physical phone is essential for tilt and frame-rate evaluation.
 
-## Offline checks run here
+**Gradle wrapper note:** The previous archive supplied `gradlew`, `gradlew.bat` and `gradle-wrapper.properties` but **not** the required `gradle/wrapper/gradle-wrapper.jar`. These files are retained. Use an installed Gradle 8.13 or Android Studio, then generate the jar with `gradle wrapper --gradle-version 8.13` before invoking `./gradlew`. GitHub Actions uses `gradle/actions/setup-gradle` and calls `gradle` directly.
+
+## Run SDK-independent checks
+
+These checks do not compile Android source:
+
+```bash
+bash tools/verify_core.sh
+bash tools/verify_water.sh
+bash tools/verify_phase3.sh
+python3 tools/verify_structure.py
 ```
-./tools/verify_core.sh
-./tools/verify_water.sh
-python3 ./tools/verify_structure.py
+
+## Project map
+
+```text
+app/src/main/java/app/gulp/android/
+  core/
+    data/                 Room database, DAO, repository, DataStore preferences
+    domain/               pure date/volume/shortcut behavior
+    graphics/             water geometry, renderer, sensors, masking
+    design/               reused UI components and palette
+    navigation/           five tabs and embedded bottom navigation
+  feature/
+    home/                 logging, quick tiles, edit sheets
+    history/              day picker, stored records
+    reminders/            next-phase stub
+    review/               next-phase stub
+    settings/             visual scale and forthcoming settings
+  MainActivity.kt         composition root, persistence flows, undo/snackbar
 ```
-These verify source/Math, not Android compilation. The authoring container has no Android SDK, Gradle installation, or Maven network access, so **a native build and installation were not possible here**. GitHub Actions `android-ci.yml` is configured to compile/test/lint and publish a debug APK upon running in a real repository.
 
-## Where to look
-- `core/graphics/WaterMath.kt` — pure, tested geometry, clamping and damping
-- `core/graphics/WaterScene.kt` — remembered, interruptible render state and frame loop
-- `core/graphics/WaterBackdrop.kt` — lightweight Compose Canvas liquid and glass
-- `core/graphics/WaterAdaptiveContent.kt` — same-surface moving glyph contrast mask
-- `core/graphics/WaterSensors.kt` — foreground-only gravity/accelerometer registration
-- `core/graphics/WaterInput.kt` — nonconsuming touch observer
-- `core/navigation/GulpNav.kt` — transparent animated five-tab bar
-- `MainActivity.kt` — lifecycle, screen shell and Water preview controls
-- `docs/PHASE2_ARCHITECTURE.md` — implementation decisions and limitations
-- `docs/PHASE2_RELEASE_CHECKLIST.md` — precisely what requires Android verification
-- `docs/DESIGN_CONTRACT.md` — approved UI decisions, authoritative over old screenshots
-- `docs/reference/` — preserved original visual studies
-- `docs/reference/evidence/` — research basis for upcoming drinking logic
+For safety and design rules read `docs/SCIENCE_RULES.md`, `docs/DESIGN_CONTRACT.md` and `docs/PHASE3_ARCHITECTURE.md`. Original approved screen references are in `docs/reference/`; some contain previous naming or layouts and the design contract supersedes those parts.
 
-## What is next
-**Phase 3** attaches authentic drinking records and customizable Home content to the water model. There is no fake persistence or timer in this build. Test and tune Phase 2 on a physical Android device first, especially the moving text mask, nav submersion in landscape, effects quality and battery.
+## Data and safety
+
+No internet permission, account requirement or analytics SDK. Logged beverages and tile choices stay on-device. Water volume relative to the chosen **display scale** is a visual, not a hydration diagnosis or medically recommended target. We count ordinary beverage volume without invented multipliers. An unlogged day is not a day without drinking.
+
+## Important verification boundary
+
+Static/XML checks and pure Kotlin assertions pass in this handoff environment. Gradle plugins, Compose, Room generation, UI integration, and real-device animations **remain unverified** until the CI workflow or Android Studio builds and tests them. If the first actual build surfaces compatibility issues, those must be fixed before declaring Phase 3 build-verified.

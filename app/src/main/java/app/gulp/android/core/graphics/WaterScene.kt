@@ -17,9 +17,9 @@ import androidx.compose.runtime.withFrameNanos
 class WaterScene {
     var seconds by mutableFloatStateOf(0f)
         private set
-    var fill by mutableFloatStateOf(0.47f)
+    var fill by mutableFloatStateOf(0f)
         private set
-    var targetFill by mutableFloatStateOf(0.47f)
+    var targetFill by mutableFloatStateOf(0f)
         private set
     var tilt by mutableFloatStateOf(0f)
         private set

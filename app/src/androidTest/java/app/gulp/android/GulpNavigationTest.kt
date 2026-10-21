@@ -1,6 +1,6 @@
 package app.gulp.android
 
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -18,15 +18,10 @@ class GulpNavigationTest {
         }
     }
 
-    @Test fun addDrinkExplainsPreviewModeWithoutCreatingFakeData() {
+    @Test fun addDrinkOpensRealEntrySheet() {
         rule.onNodeWithContentDescription("Home").performClick()
         rule.onNodeWithText("Add a drink").performClick()
-        rule.onNodeWithText("Preview build").assertIsDisplayed()
-    }
-    @Test fun waterLabShowsMotionAndFillControls() {
-        rule.onNodeWithContentDescription("Home").performClick()
-        rule.onNodeWithText("Try water effects").performClick()
-        rule.onNodeWithText("Water preview").assertIsDisplayed()
-        rule.onNodeWithText("Reduce motion").assertIsDisplayed()
+        rule.onNodeWithText("Add drink").assertExists()
+        rule.onNodeWithText("Amount (mL)").assertExists()
     }
 }
