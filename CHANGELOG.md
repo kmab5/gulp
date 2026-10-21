@@ -1,3 +1,10 @@
+## 0.6.1-rc2 — Gradle/Kotlin first-build fixes
+
+- Fixed invalid uppercase Gradle version alias `KSP` (now `ksp`), and matching `version.ref`.
+- Fixed Reminders callback referencing out-of-scope `medical` local variable.
+- Added `tools/verify_gradle_catalog.py` and CI preflight to catch malformed aliases before a costly Android build.
+- Native Android compilation remains to be confirmed by the user's Gradle run.
+
 # gulp changelog
 
 ## 0.6.0-rc1 · 2026-10-21 — Phase 6 source hardening

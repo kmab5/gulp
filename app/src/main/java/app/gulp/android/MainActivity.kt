@@ -243,7 +243,7 @@ fun GulpApp(active: Boolean = true) {
                     GulpTab.REMINDERS -> RemindersScreen(scene, viewport, preferences, notificationPermission, clock,
                         onPlanChange = { plan ->
                             scope.launch { preferencesStore.setReminders(plan) }
-                            if (plan.enabled && !medical && !notificationPermission) requestPermission()
+                            if (plan.enabled && !preferences.clinicianManagedFluids && !notificationPermission) requestPermission()
                         }, requestNotificationPermission = requestPermission)
                     GulpTab.HISTORY -> HistoryScreen(scene, viewport, records, today,
                         onEdit = { entry -> recordToEdit = entry; showDrinkSheet = true })

@@ -1,6 +1,6 @@
 # gulp — native Android hydration app
 
-**Version 0.6.0-rc1 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
+**Version 0.6.1-rc2 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
 
 This is the **complete development repository** through all six planned coding phases, including the design reference screenshots, scientific guardrails, native animated water UI, customizable quick-add Home, Room-powered drink history, onboarding, notifications and quiet hours, Review analytics, Settings, CSV export/deletion and two Glance launcher widgets.
 
@@ -11,6 +11,13 @@ This is the **complete development repository** through all six planned coding p
 3. Let Android Studio sync Gradle. In **Run Configurations**, run **app** on Android 9+.
 4. Test add/edit, reminders, Review and launcher widgets; the special water preview is in **Settings → Water animation preview**.
 5. Follow [`docs/PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md`](docs/PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md). Share the first Gradle error/stack trace if any; Android compilation was **not possible** in the authoring container.
+
+### Build-fix patch (v0.6.1-rc2)
+
+- Renamed the invalid uppercase `KSP` version alias to lowercase `ksp` in `gradle/libs.versions.toml` and updated its plugin reference. Gradle 8.13 rejects uppercase initial letters for catalog version aliases.
+- Fixed an out-of-scope `medical` variable in the Reminders tab callback; the callback now checks `preferences.clinicianManagedFluids`.
+- Added an offline version-catalog preflight (`python3 tools/verify_gradle_catalog.py`) to CI and the verification instructions.
+- These changes are **not yet an Android-compiled guarantee**. If the next Gradle run finds other issues, share the first failed task and compiler diagnostics.
 
 ### Build from terminal
 
@@ -43,6 +50,7 @@ The cross-platform `gradlew` / `gradlew.bat` scripts bootstrap the **official Gr
 Run all source-level checks from the repo root:
 
 ```bash
+python3 tools/verify_gradle_catalog.py
 bash tools/verify_core.sh
 bash tools/verify_water.sh
 bash tools/verify_phase3.sh

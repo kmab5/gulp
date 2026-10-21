@@ -13,8 +13,8 @@ android {
         applicationId = "app.gulp.android"
         minSdk = 28
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.6.0-rc1"
+        versionCode = 7
+        versionName = "0.6.1-rc2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -29,6 +29,11 @@ android {
             versionNameSuffix = "-debug"
         }
     }
+
+    // ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug -Dorg.gradle.java.home="D:/Code/java/jdk-21.0.12.1"
+    // ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug -Dorg.gradle.java.home="D:/Code/java/jdk-17.0.12"
+    // ./gradlew :app:testDebugUnitTest
+    // ./gradlew :app:assembleRelease
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
