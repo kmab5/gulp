@@ -58,6 +58,11 @@ class InMemoryDao : DrinkDao {
         flow.value = flow.value.filterNot { it.id == entry.id }
         return 1
     }
+    override suspend fun deleteAll(): Int {
+        val count = flow.value.size
+        flow.value = emptyList()
+        return count
+    }
 }
 fun main() = runBlocking {
     val repo = GulpRepository(InMemoryDao())
@@ -77,11 +82,25 @@ fun main() = runBlocking {
     val last = repo.add(DrinkKind.TEA, 225)
     check(repo.undo(last))
     check(repo.records.first().size == 1)
-    println("PASS: 11 repository add/edit/delete/undo concurrency-contract assertions (Room API stubs)")
+    check(repo.exportCsv().lines()[0] == "id,timestamp_utc,drink_type,amount_ml")
+    check(repo.deleteAll() == 1)
+    check(repo.records.first().isEmpty())
+    check(repo.deleteAll() == 0)
+    println("PASS: repository add/edit/delete/undo/export/erase contract (Room API stubs)")
 }
 KT
-kotlinc "$DIR/stubs/Room.kt" "$DIR/stubs/Context.kt" "$DIR/stubs/RepoCheck.kt" \
+cat > "$DIR/stubs/Log.kt" <<'KT'
+package android.util
+object Log { fun w(tag: String, message: String, tr: Throwable): Int = 0 }
+KT
+cat > "$DIR/stubs/Widget.kt" <<'KT'
+package app.gulp.android.widget
+import android.content.Context
+object GulpWidgetRefresh { suspend fun refresh(context: Context) {} }
+KT
+kotlinc "$DIR/stubs/Room.kt" "$DIR/stubs/Context.kt" "$DIR/stubs/Log.kt" "$DIR/stubs/Widget.kt" "$DIR/stubs/RepoCheck.kt" \
     app/src/main/java/app/gulp/android/core/domain/DrinkModels.kt \
+    app/src/main/java/app/gulp/android/core/domain/DrinkCsv.kt \
     app/src/main/java/app/gulp/android/core/data/GulpDatabase.kt \
     app/src/main/java/app/gulp/android/core/data/GulpRepository.kt \
     -classpath "$COROUTINES" -include-runtime -d "$DIR/repo.jar"

@@ -44,6 +44,9 @@ interface DrinkDao {
 
     @Delete
     suspend fun delete(entry: DrinkEntity): Int
+
+    @Query("DELETE FROM drink_records")
+    suspend fun deleteAll(): Int
 }
 
 @Database(entities = [DrinkEntity::class], version = 1, exportSchema = false)

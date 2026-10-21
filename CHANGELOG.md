@@ -1,3 +1,12 @@
+# Change log
+
+## 0.5.0-phase5 · 2026-10-20
+- Two native Glance launcher widgets, direct actions using Room and refresh on record/date changes.
+- Settings accessibility preferences persisted with DataStore; improved reduced-motion nav.
+- Secure system-document CSV export and explicitly confirmed delete-all action.
+- Repository CSV/delete tests, widget manifest checks, Phase 5 docs and CI artifact naming.
+- Full Android build and device QA still pending; no APK claimed.
+
 # gulp changelog
 
 ## 0.4.0-phase4 · 2026-10-20

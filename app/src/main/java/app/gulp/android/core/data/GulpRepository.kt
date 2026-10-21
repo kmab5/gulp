@@ -5,6 +5,9 @@ import androidx.room.Room
 import app.gulp.android.core.domain.DrinkKind
 import app.gulp.android.core.domain.DrinkRecord
 import app.gulp.android.core.domain.DrinkRules
+import app.gulp.android.core.domain.DrinkCsv
+import app.gulp.android.widget.GulpWidgetRefresh
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
@@ -19,7 +22,7 @@ sealed interface UndoAction {
 
 data class UndoTicket(val sequence: Long, val action: UndoAction, val message: String)
 
-class GulpRepository(private val dao: DrinkDao) {
+class GulpRepository(private val dao: DrinkDao, private val afterWrite: suspend () -> Unit = {}) {
     private val writeMutex = Mutex()
     private var version = 0L
     private var outstanding: UndoTicket? = null
@@ -32,6 +35,7 @@ class GulpRepository(private val dao: DrinkDao) {
     suspend fun add(kind: DrinkKind, ml: Int, atMillis: Long = System.currentTimeMillis()): UndoTicket = writeMutex.withLock {
         DrinkRules.checkAmount(ml)
         val id = dao.insert(DrinkEntity(amountMl = ml, drinkType = kind.name, timestampMillis = atMillis))
+        notifyWidgets()
         issue(UndoAction.Remove(id), "Drink added")
     }
 
@@ -41,12 +45,14 @@ class GulpRepository(private val dao: DrinkDao) {
         val edited = before.copy(amountMl = ml, drinkType = kind.name, timestampMillis = atMillis)
         if (edited == before) return@withLock null
         if (dao.update(edited) == 0) return@withLock null
+        notifyWidgets()
         issue(UndoAction.Restore(before.asRecord()), "Drink updated")
     }
 
     suspend fun delete(id: Long): UndoTicket? = writeMutex.withLock {
         val old = dao.findById(id) ?: return@withLock null
         if (dao.delete(old) == 0) return@withLock null
+        notifyWidgets()
         issue(UndoAction.Restore(old.asRecord()), "Drink deleted")
     }
 
@@ -57,7 +63,23 @@ class GulpRepository(private val dao: DrinkDao) {
             is UndoAction.Restore -> dao.insert(DrinkEntity.from(action.record))
         }
         outstanding = null
+        notifyWidgets()
         true
+    }
+
+    /** Remove records irreversibly only after explicit UI confirmation. */
+    suspend fun deleteAll(): Int = writeMutex.withLock {
+        val deleted = dao.deleteAll()
+        outstanding = null
+        if (deleted > 0) notifyWidgets()
+        deleted
+    }
+
+    suspend fun exportCsv(): String = DrinkCsv.encode(records.first())
+
+    private suspend fun notifyWidgets() {
+        // A launcher or missing widget must never prevent saving a drink.
+        runCatching { afterWrite() }.onFailure { Log.w("gulp-widgets", "Widget refresh failed", it) }
     }
 
     private fun issue(action: UndoAction, message: String): UndoTicket =
@@ -70,7 +92,7 @@ class GulpRepository(private val dao: DrinkDao) {
                 db ?: Room.databaseBuilder(context.applicationContext, GulpDatabase::class.java, "gulp_records.db")
                     .build().also { db = it }
             }
-            return GulpRepository(instance.drinks())
+            return GulpRepository(instance.drinks(), afterWrite = { GulpWidgetRefresh.refresh(context.applicationContext) })
         }
     }
 }

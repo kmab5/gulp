@@ -7,6 +7,12 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import androidx.compose.runtime.CompositionLocalProvider
+import app.gulp.android.core.graphics.LocalStrongerContrast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -115,10 +121,9 @@ fun GulpApp(active: Boolean = true) {
     var viewport by remember { mutableStateOf(IntSize.Zero) }
     var tabRoute by rememberSaveable { mutableStateOf(GulpTab.HOME.route) }
     val tab = GulpTab.fromRoute(tabRoute)
-    var notice by rememberSaveable { mutableStateOf<String?>(null) }
     var showWaterLab by rememberSaveable { mutableStateOf(false) }
-    var userReduceMotion by rememberSaveable { mutableStateOf(false) }
     var systemReduced by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showDrinkSheet by remember { mutableStateOf(false) }
     var recordToEdit by remember { mutableStateOf<DrinkRecord?>(null) }
     var initialKind by remember { mutableStateOf(DrinkKind.WATER) }
@@ -130,6 +135,21 @@ fun GulpApp(active: Boolean = true) {
     var notificationPermission by remember { mutableStateOf(GulpReminderScheduler.notificationsAllowed(context)) }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         notificationPermission = granted
+    }
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri: Uri? ->
+        if (uri != null) scope.launch {
+            val result = runCatching {
+                val csv = withContext(Dispatchers.IO) { repository.exportCsv() }
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { writer ->
+                        writer.write(csv)
+                    } ?: throw IOException("Couldn't open the selected file")
+                }
+            }
+            snackbars.showSnackbar(if (result.isSuccess) "Drinks exported" else "Couldn't export: ${result.exceptionOrNull()?.message ?: "unknown error"}")
+        }
     }
     val requestPermission = {
         if (Build.VERSION.SDK_INT >= 33) {
@@ -158,21 +178,26 @@ fun GulpApp(active: Boolean = true) {
     LaunchedEffect(todayMl, preferences.visualCapacityMl) {
         scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
     }
-    LaunchedEffect(context, active, userReduceMotion) {
+    LaunchedEffect(context, active, preferences.reduceMotion) {
         if (active) {
             systemReduced = runCatching {
                 Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
             }.getOrDefault(false)
-            scene.setReducedMotion(systemReduced || userReduceMotion)
+            scene.setReducedMotion(systemReduced || preferences.reduceMotion)
         }
     }
-    WaterTiltSensor(scene, active)
+    WaterTiltSensor(scene, active, preferences.tiltEnabled)
 
-    Box(Modifier.fillMaxSize().onSizeChanged { viewport = it }.waterTouchFeedback(scene)) {
+    CompositionLocalProvider(LocalStrongerContrast provides preferences.strongerContrast) {
+    Box(Modifier.fillMaxSize().onSizeChanged { viewport = it }.waterTouchFeedback(scene, preferences.touchRipplesEnabled)) {
         WaterBackdrop(scene)
         Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)) {
             AnimatedContent(targetState = tab, modifier = Modifier.fillMaxSize(),
-                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(260)) },
+                transitionSpec = {
+                    val enterMs = if (scene.reducedMotion) 0 else 300
+                    val exitMs = if (scene.reducedMotion) 0 else 260
+                    fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
+                },
                 label = "tab crossfade") { destination ->
                 when (destination) {
                     GulpTab.HOME -> HomeScreen(scene = scene, viewport = viewport, todayMl = todayMl,
@@ -211,7 +236,11 @@ fun GulpApp(active: Boolean = true) {
                         onCustomizeHome = { tabRoute = GulpTab.HOME.route },
                         onReminders = { tabRoute = GulpTab.REMINDERS.route },
                         onWaterLab = { showWaterLab = true },
-                        onPreviewAction = { notice = "This setting is scheduled for Phase 5." })
+                        onAppearanceChange = { reduced, tilt, ripples, contrast ->
+                            scope.launch { preferencesStore.setAppearance(reduced, tilt, ripples, contrast) }
+                        },
+                        onExport = { exportLauncher.launch("gulp-drinks.csv") },
+                        onDeleteAll = { showDeleteConfirmation = true })
                 }
             }
         }
@@ -222,6 +251,22 @@ fun GulpApp(active: Boolean = true) {
         SnackbarHost(snackbars, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 99.dp))
     }
 
+    } // end preference-driven contrast provider
+    if (showDeleteConfirmation) AlertDialog(
+        onDismissRequest = { showDeleteConfirmation = false },
+        title = { Text("Delete all drinks?") },
+        text = { Text("This permanently deletes your saved drink history. It can't be undone. Your settings and reminders stay as they are.") },
+        dismissButton = { TextButton(onClick = { showDeleteConfirmation = false }) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = {
+            showDeleteConfirmation = false
+            scope.launch {
+                val deleted = repository.deleteAll()
+                snackbars.showSnackbar(if (deleted == 0) "No drinks to delete" else "$deleted drink records deleted")
+            }
+        }) { Text("Delete all") } },
+        containerColor = GulpPalette.DeepBlue, titleContentColor = Color.White,
+        textContentColor = GulpPalette.SoftWhite
+    )
     if (showDrinkSheet) {
         val original = recordToEdit
         DrinkEditorSheet(existing = original, initialKind = initialKind, initialAmount = initialAmount,
@@ -255,11 +300,6 @@ fun GulpApp(active: Boolean = true) {
                 }
             } })
     }
-    if (notice != null) AlertDialog(onDismissRequest = { notice = null },
-        title = { Text("Not available yet") }, text = { Text(notice.orEmpty()) },
-        confirmButton = { TextButton(onClick = { notice = null }) { Text("OK") } },
-        containerColor = GulpPalette.DeepBlue, titleContentColor = Color.White,
-        textContentColor = GulpPalette.SoftWhite)
     if (showWaterLab) AlertDialog(onDismissRequest = {
         showWaterLab = false
         scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
@@ -271,8 +311,12 @@ fun GulpApp(active: Boolean = true) {
             }, valueRange = 0f..1f)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Reduce motion", modifier = Modifier.weight(1f))
-                Switch(checked = userReduceMotion || systemReduced, enabled = !systemReduced,
-                    onCheckedChange = { userReduceMotion = it; scene.setReducedMotion(it) })
+                Switch(checked = preferences.reduceMotion || systemReduced, enabled = !systemReduced,
+                    onCheckedChange = {
+                        scene.setReducedMotion(it)
+                        scope.launch { preferencesStore.setAppearance(it, preferences.tiltEnabled,
+                            preferences.touchRipplesEnabled, preferences.strongerContrast) }
+                    })
             }
         }
     }, confirmButton = { TextButton(onClick = {

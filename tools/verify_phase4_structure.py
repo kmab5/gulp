@@ -34,6 +34,7 @@ assert (src/'core/domain/TrackingReference.kt').is_file()
 main=(src/'MainActivity.kt').read_text()
 assert 'OnboardingScreen(' in main and 'RemindersScreen(' in main and 'ReviewScreen(' in main
 assert 'preferences.reminders' in main and 'GulpReminderScheduler.schedule' in main
-assert 'versionName = "0.4.0-phase4"' in (root/'app/build.gradle.kts').read_text()
-assert 'gulp-phase4-debug' in (root/'.github/workflows/android-ci.yml').read_text()
+# Later phases must preserve Phase 4's working feature contracts while bumping version and CI artifact names.
+assert 'versionName = "0.' in (root/'app/build.gradle.kts').read_text()
+assert 'gulp-phase' in (root/'.github/workflows/android-ci.yml').read_text()
 print('PASS: Phase 4 manifest, alarms/permissions, state & UI wiring static checks')

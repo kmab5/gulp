@@ -1,14 +1,15 @@
-# Remaining plan after Phase 3
+# gulp — ongoing plan after Phase 5
 
-- Phase 4: onboarding, scientific tracking references and reminder scheduler, real History refinements, Review dashboard and weekly analyses. Currently Reminders and Review are unfinished foundation screens.
-- Phase 5: app settings, data/privacy controls, native Android widgets and accessibility completion. Widgets are mandatory for the first release.
-- Phase 6: full build/test/benchmark pass, package-size optimization, graphics polish and release candidate.
+## Phase 5 handed off (source implementation)
 
-Always deliver the **complete updated repository**, retaining all earlier code, images and docs.
+Phases 1–5 remain in the full repository archive. Phase 5 adds launcher widgets, Settings appearance/accessibility preferences, personal-data export and irreversible confirmed deletion. See README and PHASE5_ARCHITECTURE.md for integration and testing.
 
+## Phase 6 — quality and release
 
-## Current status after Phase 4 (source delivered)
-- Phase 4 delivered: onboarding, inexact Android reminder scheduling/actions, local-intake references, seven-day Review.
-- Phase 5 next: full Settings polish, Android Glance widgets, export/delete privacy controls, accessibility preferences.
-- Phase 6: SDK/CI compile and device smoke-tests, performance and battery tuning, final release packaging.
-- Phases 1–4 still require successful Android SDK compilation and device validation; do not describe these as APK-tested.
+1. Ensure the actual Android SDK build and CI tests pass; fix any Gradle, Compose, Glance or KSP errors.
+2. Run `docs/PHASE5_DEVICE_TEST.md` and earlier test checklists on real devices/launchers.
+3. Profile the full-screen water engine on mid-range Android hardware and improve animations/contrast where required.
+4. Validate battery usage, quiet-hour alarms, data flow, accessibility, widget/launcher lifecycle, and dark/light appearance.
+5. Reduce package size, run R8 checks, prepare signed Android release candidate.
+
+**Always deliver full updated repository ZIPs rather than patches. Widgets are part of the initial release.**

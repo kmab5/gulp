@@ -1,1 +1,3 @@
-<resources><string name="app_name">gulp</string></resources>
+<resources><string name="app_name">gulp</string>    <string name="widget_quick_description">Log a drink without opening gulp</string>
+    <string name="widget_summary_description">See today’s logged drinks and quick-add water</string>
+</resources>

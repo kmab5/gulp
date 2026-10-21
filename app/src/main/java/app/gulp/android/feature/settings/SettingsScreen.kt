@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +33,9 @@ fun SettingsScreen(
     onVisualCapacityChange: (Int) -> Unit,
     onTrackingChange: (Int, Boolean) -> Unit,
     onCustomizeHome: () -> Unit, onWaterLab: () -> Unit,
-    onReminders: () -> Unit, onPreviewAction: () -> Unit
+    onReminders: () -> Unit,
+    onAppearanceChange: (Boolean, Boolean, Boolean, Boolean) -> Unit,
+    onExport: () -> Unit, onDeleteAll: () -> Unit
 ) {
     val visualCapacityMl = preferences.visualCapacityMl
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
@@ -89,17 +92,47 @@ fun SettingsScreen(
             Column {
                 PreferenceRow("Water animation preview", "Try the water level and reduced motion", onWaterLab)
                 PreferenceRow("Reminder preferences", "Times, intervals, quiet hours", onReminders)
-                PreferenceRow("Appearance and accessibility", null, onPreviewAction)
+                Note("Home-screen widgets: touch and hold an empty part of your Android home screen, choose Widgets, then find gulp.")
+            }
+        }
+        FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Appearance and accessibility", color = GulpPalette.White, fontWeight = FontWeight.Bold)
+                Note("These choices are saved on your phone. System reduced-motion settings are also respected.")
+                AppearanceToggle("Reduce animation", "Keeps the water still and avoids extra movement", preferences.reduceMotion) {
+                    onAppearanceChange(it, preferences.tiltEnabled, preferences.touchRipplesEnabled, preferences.strongerContrast)
+                }
+                AppearanceToggle("Tilt response", "Water moves when you tilt your phone", preferences.tiltEnabled) {
+                    onAppearanceChange(preferences.reduceMotion, it, preferences.touchRipplesEnabled, preferences.strongerContrast)
+                }
+                AppearanceToggle("Touch ripples", "Small waves when you touch the screen", preferences.touchRipplesEnabled) {
+                    onAppearanceChange(preferences.reduceMotion, preferences.tiltEnabled, it, preferences.strongerContrast)
+                }
+                AppearanceToggle("Stronger text contrast", "High-contrast text above and below the water", preferences.strongerContrast) {
+                    onAppearanceChange(preferences.reduceMotion, preferences.tiltEnabled, preferences.touchRipplesEnabled, it)
+                }
             }
         }
         FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {
             Column {
                 Text("Data and privacy", color = GulpPalette.White, fontWeight = FontWeight.Bold)
-                Note("Drink records are stored locally. No account or internet permission is required.")
-                PreferenceRow("Export your drinks", null, onPreviewAction)
-                PreferenceRow("Delete all records", null, onPreviewAction)
+                Note("Your drinks stay on this device unless you export them. No account or internet needed.")
+                PreferenceRow("Export drinks as CSV", "Choose where to save a copy", onExport)
+                PreferenceRow("Delete all drinks", "Permanently remove your saved drink history", onDeleteAll)
             }
         }
-        WaterAdaptiveText("gulp · Phase 4", scene, viewport, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun AppearanceToggle(label: String, supporting: String, selected: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 7.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(label, color = GulpPalette.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Note(supporting)
+        }
+        Switch(checked = selected, onCheckedChange = onChange)
     }
 }

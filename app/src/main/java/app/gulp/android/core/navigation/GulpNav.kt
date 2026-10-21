@@ -3,6 +3,7 @@ package app.gulp.android.core.navigation
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,7 +56,7 @@ fun GulpNav(
 ) {
     val index = animateFloatAsState(
         targetValue = current.ordinal.toFloat(),
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = 0.88f),
+        animationSpec = if (scene.reducedMotion) snap() else spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = 0.88f),
         label = "selected nav position"
     )
     val density = LocalDensity.current

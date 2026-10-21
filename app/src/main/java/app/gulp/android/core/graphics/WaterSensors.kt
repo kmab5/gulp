@@ -13,11 +13,11 @@ import androidx.compose.ui.platform.LocalContext
 
 /** Sensor registration strictly follows foreground + effects-enabled lifecycle. No permission needed. */
 @Composable
-fun WaterTiltSensor(scene: WaterScene, active: Boolean) {
+fun WaterTiltSensor(scene: WaterScene, active: Boolean, tiltEnabled: Boolean = true) {
     val context = LocalContext.current
     val view = LocalView.current
-    DisposableEffect(context, view, scene, active, scene.reducedMotion) {
-        if (!active || scene.reducedMotion) {
+    DisposableEffect(context, view, scene, active, tiltEnabled, scene.reducedMotion) {
+        if (!active || !tiltEnabled || scene.reducedMotion) {
             scene.setGravityX(0f)
             onDispose { }
         } else {

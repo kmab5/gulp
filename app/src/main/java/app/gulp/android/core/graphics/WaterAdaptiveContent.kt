@@ -3,6 +3,8 @@ package app.gulp.android.core.graphics
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -24,6 +26,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import app.gulp.android.core.design.GulpPalette
 
+/** Optional preference strengthens colors without changing which pixels are submerged. */
+val LocalStrongerContrast = staticCompositionLocalOf { false }
+
 /**
  * Paint light content first, then paint the IDENTICAL shape dark only where it is underwater.
  * The second visual copy is inaccessible to screen readers and has no gesture handlers.
@@ -44,11 +49,14 @@ fun WaterAdaptiveText(
     above: Color = GulpPalette.White,
     below: Color = GulpPalette.Ink
 ) {
+    val isStrong = LocalStrongerContrast.current
+    val lightColor = if (isStrong) Color.White else above
+    val darkColor = if (isStrong) Color(0xFF031120) else below
     Box(modifier = modifier) {
-        Text(text, color = above, fontSize = fontSize, fontWeight = fontWeight,
+        Text(text, color = lightColor, fontSize = fontSize, fontWeight = fontWeight,
             letterSpacing = letterSpacing, lineHeight = lineHeight,
             textAlign = textAlign, maxLines = maxLines)
-        Text(text, color = below, fontSize = fontSize, fontWeight = fontWeight,
+        Text(text, color = darkColor, fontSize = fontSize, fontWeight = fontWeight,
             letterSpacing = letterSpacing, lineHeight = lineHeight,
             textAlign = textAlign, maxLines = maxLines,
             modifier = Modifier.matchParentSize().waterBelowClip(scene, viewport)

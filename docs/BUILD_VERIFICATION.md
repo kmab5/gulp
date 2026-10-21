@@ -46,3 +46,13 @@ Reminder: inherited Phase 2 archive lacked `gradle/wrapper/gradle-wrapper.jar`; 
 - [x] Manifest/Gradle/Kotlin source/static structure verified.
 - [ ] Android SDK build, notification integration, Room/KSP, Compose tests and OEM background delivery not verified in this environment.
 - [ ] Device acceptance checks listed in `docs/PHASE4_DEVICE_TEST.md`.
+
+## Phase 5 — October 20, 2026
+- [x] Standalone CSV encoder compiled and tested with 801 offline assertions.
+- [x] Repository Room-substitute check tested add/edit/delete/undo/export/erase.
+- [x] Phase 5 manifest/widget, settings, SAF integration checks passed.
+- [x] Earlier Phase 1–4 pure Kotlin checks retained.
+- [ ] Native Android Gradle/Glance/Room/KSP compilation — no usable Android SDK/dependency download in this authoring environment.
+- [ ] Device-launcher and sensor/accessibility acceptance checklist in `PHASE5_DEVICE_TEST.md`.
+
+Source-integrated does not imply Android-build verified.

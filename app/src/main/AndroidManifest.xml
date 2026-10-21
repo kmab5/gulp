@@ -26,5 +26,31 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+        <!-- Native launcher widgets. Glance produces static RemoteViews; no live sensors. -->
+        <receiver android:name=".widget.GulpQuickWidgetReceiver"
+            android:label="gulp · Quick add" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/gulp_quick_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.GulpSummaryWidgetReceiver"
+            android:label="gulp · Today" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/gulp_summary_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.GulpWidgetDateReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

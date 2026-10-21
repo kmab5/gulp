@@ -23,11 +23,19 @@ data class GulpPreferences(
     val hasCompletedOnboarding: Boolean = false,
     val trackingReferenceMl: Int = 0,
     val clinicianManagedFluids: Boolean = false,
-    val reminders: ReminderPlan = ReminderPlan()
+    val reminders: ReminderPlan = ReminderPlan(),
+    val reduceMotion: Boolean = false,
+    val tiltEnabled: Boolean = true,
+    val touchRipplesEnabled: Boolean = true,
+    val strongerContrast: Boolean = false
 )
 
 /** UI, receiver and alarm scheduler all read this single persistent source of truth. */
 class GulpPreferencesStore(private val context: Context) {
+    private val reduceMotionKey = booleanPreferencesKey("reduce_motion_v1")
+    private val tiltKey = booleanPreferencesKey("tilt_enabled_v1")
+    private val ripplesKey = booleanPreferencesKey("touch_ripples_enabled_v1")
+    private val contrastKey = booleanPreferencesKey("stronger_contrast_v1")
     private val tileKey = stringPreferencesKey("home_tiles_v1")
     private val displayCapacityKey = intPreferencesKey("water_display_capacity_ml_v1")
     private val onboardKey = booleanPreferencesKey("onboarding_completed_v1")
@@ -55,7 +63,11 @@ class GulpPreferencesStore(private val context: Context) {
             hasCompletedOnboarding = p[onboardKey] ?: false,
             trackingReferenceMl = TrackingReference.sanitized(p[referenceKey] ?: 0),
             clinicianManagedFluids = p[medicalKey] ?: false,
-            reminders = if (plan.valid()) plan else ReminderPlan()
+            reminders = if (plan.valid()) plan else ReminderPlan(),
+            reduceMotion = p[reduceMotionKey] ?: false,
+            tiltEnabled = p[tiltKey] ?: true,
+            touchRipplesEnabled = p[ripplesKey] ?: true,
+            strongerContrast = p[contrastKey] ?: false
         )
     }
 
@@ -118,6 +130,15 @@ class GulpPreferencesStore(private val context: Context) {
 
     suspend fun snoozeUntil(timeMillis: Long) {
         context.gulpDataStore.edit { it[snoozeKey] = timeMillis.coerceAtLeast(0) }
+    }
+
+    suspend fun setAppearance(reduceMotion: Boolean, tiltEnabled: Boolean, touchRipples: Boolean, strongerContrast: Boolean) {
+        context.gulpDataStore.edit { p ->
+            p[reduceMotionKey] = reduceMotion
+            p[tiltKey] = tiltEnabled
+            p[ripplesKey] = touchRipples
+            p[contrastKey] = strongerContrast
+        }
     }
 
     suspend fun setTracking(referenceMl: Int, clinicianManaged: Boolean) {
