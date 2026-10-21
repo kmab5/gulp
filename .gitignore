@@ -1,10 +1,39 @@
+# Android and Kotlin build outputs (based on github/gitignore Android + Kotlin)
 .gradle/
-.idea/
-*.iml
-/local.properties
-/build/
+.kotlin/
 **/build/
+local.properties
 /captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+.idea/
+*.class
+*.log
+*.hprof
 *.apk
 *.aab
+*.apks
+*.idsig
+output-metadata.json
+
+# Private release signing key and local credentials (never commit)
+/build-key
+/build-key.*
+/keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+
+# Local Android / IDE / OS files
+*.hprof
+hs_err_pid*
+replay_pid*
 .DS_Store
+Thumbs.db
+
+# Optional third-party configuration
+google-services.json

@@ -23,10 +23,10 @@ require(versions['versions']['agp'] == '8.13.2', 'Unexpected AGP version')
 require(versions['versions']['kotlin'] == '2.2.21', 'Unexpected Kotlin version')
 require('gradle-8.13-bin.zip' in (root / 'gradle/wrapper/gradle-wrapper.properties').read_text(), 'Gradle wrapper mismatch')
 appgradle = (root / 'app/build.gradle.kts').read_text()
-for phrase in ('compileSdk = 36', 'minSdk = 28', 'targetSdk = 36', 'namespace = "app.gulp.android"', 'buildFeatures { compose = true }'):
+for phrase in ('compileSdk = 36', 'minSdk = 28', 'targetSdk = 36', 'namespace = "com.kmab.gulp"', 'buildFeatures { compose = true }'):
     require(phrase in appgradle, f'Missing build setting {phrase}')
 
-pkg = root / 'app/src/main/java/app/gulp/android'
+pkg = root / 'app/src/main/java/com/kmab/gulp'
 for rel in ('MainActivity.kt','core/graphics/WaterBackdrop.kt','core/graphics/WaterMath.kt','core/graphics/WaterScene.kt','core/graphics/WaterAdaptiveContent.kt','core/graphics/WaterSensors.kt','core/graphics/WaterInput.kt','core/navigation/GulpNav.kt','core/navigation/GulpTab.kt','core/domain/RecordedProgress.kt','feature/home/HomeScreen.kt','feature/reminders/RemindersScreen.kt','feature/history/HistoryScreen.kt','feature/review/ReviewScreen.kt','feature/settings/SettingsScreen.kt'):
     require((pkg / rel).is_file(), f'Missing {rel}')
 

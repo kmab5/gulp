@@ -10,7 +10,7 @@ Status: **Unverified Android release candidate source**. The authoring container
 4. From a terminal with Gradle 8.13: `gradle :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
 5. To use wrapper scripts instead of installed Gradle: `./gradlew ...` (macOS/Linux) or `gradlew.bat ...` (Windows). **First execution downloads the official Gradle wrapper bootstrap JAR from GitHub and checks its Git blob SHA**, followed by the official Gradle 8.13 distribution. No bootstrap JAR has been embedded in this ZIP. If GitHub is blocked, use the installed Gradle 8.13 instead.
 6. `gradle :app:connectedDebugAndroidTest` requires an emulator or phone. First-launch navigation tests seed the onboarding flag.
-7. `gradle :app:assembleRelease :app:bundleRelease` builds **unsigned** optimized artifacts. They are not production-installable until properly signed.
+7. `gradle :app:assembleRelease :app:bundleRelease` requires local root `build-key` and `keystore.properties` and builds **signed** optimized artifacts. See `docs/RELEASE_SIGNING.md`.
 
 ## Native compilation and functionality gates (all currently unchecked)
 
@@ -34,4 +34,4 @@ Status: **Unverified Android release candidate source**. The authoring container
 
 ## Release boundary
 
-The debug variant uses `app.gulp.android.debug`; the eventual release uses `app.gulp.android`. Production signing, Play Store listing, policy review, and real-device performance measurements remain outside what can be honestly verified in this environment. **Do not publish without these checks.**
+The debug variant uses `com.kmab.gulp.debug`; the eventual release uses `com.kmab.gulp`. Production signing, Play Store listing, policy review, and real-device performance measurements remain outside what can be honestly verified in this environment. **Do not publish without these checks.**

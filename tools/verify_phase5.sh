@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 DIR="$(mktemp -d)"; trap 'rm -rf "$DIR"' EXIT
 cat > "$DIR/Test.kt" <<'KT'
-import app.gulp.android.core.domain.*
+import com.kmab.gulp.core.domain.*
 import java.time.Instant
 fun main() {
     var checks = 0
@@ -20,8 +20,8 @@ fun main() {
     println("PASS: $checks offline CSV structure, UTC order, bounded rows")
 }
 KT
-kotlinc app/src/main/java/app/gulp/android/core/domain/DrinkModels.kt \
-    app/src/main/java/app/gulp/android/core/domain/DrinkCsv.kt \
+kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkCsv.kt \
     "$DIR/Test.kt" -include-runtime -d "$DIR/check.jar"
 java -jar "$DIR/check.jar"
 python3 tools/verify_phase5_structure.py

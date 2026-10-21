@@ -1,8 +1,12 @@
 # gulp — native Android hydration app
 
-**Version 0.6.2-rc3 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
+**Version 0.6.3-rc4 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
 
 This is the **complete development repository** through all six planned coding phases, including the design reference screenshots, scientific guardrails, native animated water UI, customizable quick-add Home, Room-powered drink history, onboarding, notifications and quiet hours, Review analytics, Settings, CSV export/deletion and two Glance launcher widgets.
+
+## Package identity and signed releases
+
+The application ID and Kotlin packages are now `com.kmab.gulp`. The release signing key is expected as the ignored root file `build-key`; local passwords go in ignored `keystore.properties`. See [docs/RELEASE_SIGNING.md](docs/RELEASE_SIGNING.md) before the first release build. Routine CI builds are debug-only and require no signing key.
 
 ## First compilation — Android Studio
 
@@ -12,7 +16,7 @@ This is the **complete development repository** through all six planned coding p
 4. Test add/edit, reminders, Review and launcher widgets; the special water preview is in **Settings → Water animation preview**.
 5. Follow [`docs/PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md`](docs/PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md). Share the first Gradle error/stack trace if any; Android compilation was **not possible** in the authoring container.
 
-### Build-fix patch (v0.6.2-rc3)
+### Build-fix patch (v0.6.3-rc4)
 
 The latest Windows Gradle log reached `:app:compileDebugKotlin` and reported errors in three Compose source files. We fixed the outer `ContentDrawScope` receiver call inside the waterline `clipPath` operation, and explicitly opted the two editor sheets into Material 3's experimental bottom-sheet API. We also migrated the deprecated `android.kotlinOptions` to `kotlin.compilerOptions` (JVM 17). The earlier fixes for the `ksp` catalog alias and Reminders callback are retained.
 
@@ -32,7 +36,7 @@ Check the corrections without an Android SDK using `python3 tools/verify_compose
 gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 # If you have an emulator/phone attached:
 gradle :app:connectedDebugAndroidTest
-# Release artifacts (unsigned until you configure signing):
+# Release artifacts (signed using root build-key and keystore.properties):
 gradle :app:assembleRelease :app:bundleRelease
 python3 tools/report_package_size.py
 ```
@@ -48,7 +52,7 @@ The cross-platform `gradlew` / `gradlew.bat` scripts bootstrap the **official Gr
 - Settings > Customize shortcuts enters edit mode immediately, and the request is consumed once; no accidental re-entry on subsequent Home visits.
 - Drink date editor now handles month/year changes safely (previous month-end selection could crash).
 - Launcher widget receivers are accessible to the Android host; widget actions still use the same Room writer.
-- Removed an obsolete Compose pointer-input import, updated Gradle artifacts to `0.6.0-rc1`, expanded CI to test/lint/build debug plus unsigned release outputs, and added package-size reporting.
+- Removed an obsolete Compose pointer-input import, updated Gradle artifacts to `0.6.0-rc1`, expanded CI to test/lint/build debug and prepare release packaging (historical v0.6.0 note), and added package-size reporting.
 - Full earlier phase source and reference design assets are preserved. No internet permission or cloud tracking is added.
 
 ## Offline verification
@@ -74,7 +78,7 @@ These checks compile and run the **actual Kotlin domain/geometry code** and exer
 
 ## Project layout
 
-- `app/src/main/java/app/gulp/android/core/graphics/`: procedural water, touch ripples, sensors, shared waterline masking.
+- `app/src/main/java/com/kmab/gulp/core/graphics/`: procedural water, touch ripples, sensors, shared waterline masking.
 - `core/data/` and `core/domain/`: Room, DataStore, drinks, undo, reminders, reporting and CSV.
 - `core/reminders/`: inexact alarms, notification actions, restart/timezone handling.
 - `feature/`: Home, History, Reminders, Review, Settings, onboarding.

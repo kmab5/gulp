@@ -14,11 +14,11 @@ for name in ('GulpQuickWidgetReceiver','GulpSummaryWidgetReceiver','GulpWidgetDa
 for info in ('gulp_quick_widget_info.xml','gulp_summary_widget_info.xml'):
     node=ET.parse(app/'res/xml'/info).getroot()
     assert node.attrib.get(ns+'initialLayout')=='@layout/gulp_widget_loading'
-repo=(app/'java/app/gulp/android/core/data/GulpRepository.kt').read_text()
+repo=(app/'java/com/kmab/gulp/core/data/GulpRepository.kt').read_text()
 assert all(x in repo for x in ('suspend fun deleteAll()', 'suspend fun exportCsv()', 'notifyWidgets()'))
-settings=(app/'java/app/gulp/android/feature/settings/SettingsScreen.kt').read_text()
+settings=(app/'java/com/kmab/gulp/feature/settings/SettingsScreen.kt').read_text()
 assert all(x in settings for x in ('onExport','onDeleteAll','AppearanceToggle','strongerContrast'))
-activity=(app/'java/app/gulp/android/MainActivity.kt').read_text()
+activity=(app/'java/com/kmab/gulp/MainActivity.kt').read_text()
 assert 'ActivityResultContracts.CreateDocument' in activity
 assert 'showDeleteConfirmation' in activity
 assert 'CompositionLocalProvider(LocalStrongerContrast' in activity

@@ -1,3 +1,11 @@
+## 0.6.3-rc4 — package identity, JVM compile fix, signing
+
+- Fixed the WaterScene property-setter collision by renaming its method to `updateReducedMotion` and updating call sites.
+- Migrated Kotlin and test packages, source directories, application ID, and Gradle namespace to `com.kmab.gulp`.
+- Added deterministic local release signing with ignored root `build-key` and `keystore.properties`. Release packaging cannot silently be unsigned.
+- Expanded `.gitignore` using GitHub's Android/Kotlin patterns and protected signing material.
+- Kept CI debug-only until securely configured release signing is intentionally enabled.
+
 ## 0.6.2-rc3 — Kotlin/Compose compilation corrections
 
 - Fixed waterline contrast's nested drawing scope: explicitly call `this@drawWithContent.drawContent()` in the `clipPath` block.

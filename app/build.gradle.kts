@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,21 +8,64 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+/** The private release key is local and must never be checked into Git. */
+val releaseKeyFile = rootProject.file("build-key")
+val releasePropertiesFile = rootProject.file("keystore.properties")
+val releaseProperties = Properties().apply {
+    if (releasePropertiesFile.isFile) {
+        releasePropertiesFile.inputStream().use(::load)
+    }
+}
+val releaseSigningReady = releaseKeyFile.isFile &&
+    listOf("storePassword", "keyPassword", "keyAlias").all {
+        !releaseProperties.getProperty(it).isNullOrBlank()
+    }
+
+val verifyReleaseSigning by tasks.registering {
+    group = "verification"
+    description = "Require the private build-key and keystore.properties for signed release outputs"
+    doLast {
+        check(releaseSigningReady) {
+            "Release signing is not configured. Put build-key and keystore.properties " +
+                "at the repository root; see docs/RELEASE_SIGNING.md. " +
+                "Debug builds do not require a release key."
+        }
+    }
+}
+
+// Never allow unsigned release packaging when credentials are missing.
+tasks.matching { it.name in setOf("assembleRelease", "packageRelease", "bundleRelease") }
+    .configureEach { dependsOn(verifyReleaseSigning) }
+
 android {
-    namespace = "app.gulp.android"
+    namespace = "com.kmab.gulp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "app.gulp.android"
+        applicationId = "com.kmab.gulp"
         minSdk = 28
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.6.2-rc3"
+        versionCode = 9
+        versionName = "0.6.3-rc4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (releaseSigningReady) {
+            create("release") {
+                storeFile = releaseKeyFile
+                storePassword = releaseProperties.getProperty("storePassword")
+                keyAlias = releaseProperties.getProperty("keyAlias")
+                keyPassword = releaseProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (releaseSigningReady) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

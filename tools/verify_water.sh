@@ -5,7 +5,7 @@ command -v kotlinc >/dev/null || { echo 'Install Kotlin CLI to run the SDK-free 
 DIR="$(mktemp -d)"
 trap 'rm -rf "$DIR"' EXIT
 cat > "$DIR/WaterCheck.kt" <<'KT'
-import app.gulp.android.core.graphics.*
+import com.kmab.gulp.core.graphics.*
 import kotlin.math.abs
 fun main() {
   var count = 0
@@ -29,5 +29,5 @@ fun main() {
   println("PASS: $count pure Kotlin water-geometry assertions")
 }
 KT
-kotlinc app/src/main/java/app/gulp/android/core/graphics/WaterMath.kt "$DIR/WaterCheck.kt" -include-runtime -d "$DIR/water.jar"
+kotlinc app/src/main/java/com/kmab/gulp/core/graphics/WaterMath.kt "$DIR/WaterCheck.kt" -include-runtime -d "$DIR/water.jar"
 java -jar "$DIR/water.jar"

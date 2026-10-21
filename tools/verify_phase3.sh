@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 cat > "$TMP/Phase3Check.kt" <<'KT'
-import app.gulp.android.core.domain.*
+import com.kmab.gulp.core.domain.*
 import java.time.*
 fun main() {
     var checks = 0
@@ -45,5 +45,5 @@ fun main() {
     println("PASS: $checks pure-Kotlin Phase 3 rules/shortcut/date assertions")
 }
 KT
-kotlinc app/src/main/java/app/gulp/android/core/domain/DrinkModels.kt "$TMP/Phase3Check.kt" -include-runtime -d "$TMP/phase3.jar"
+kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt "$TMP/Phase3Check.kt" -include-runtime -d "$TMP/phase3.jar"
 java -jar "$TMP/phase3.jar"

@@ -32,15 +32,14 @@ jobs:
           python3 tools/verify_structure.py
           python3 tools/verify_phase4_structure.py
           python3 tools/verify_phase5_structure.py
+          python3 tools/verify_release_identity.py
       - name: Compile, test, lint and package
         run: |
           gradle --version
           gradle --no-daemon --stacktrace \
             :app:testDebugUnitTest \
             :app:lintDebug \
-            :app:assembleDebug \
-            :app:assembleRelease \
-            :app:bundleRelease
+            :app:assembleDebug
       - name: Report archive sizes
         if: success()
         run: python3 tools/report_package_size.py
@@ -48,19 +47,9 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: gulp-phase6-debug-apk
+          name: gulp-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-      - name: Upload unsigned release artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gulp-phase6-unsigned-release
-          path: |
-            app/build/outputs/apk/release/*
-            app/build/outputs/bundle/release/*
-            app/build/outputs/mapping/release/*
-          if-no-files-found: warn
       - name: Upload lint report on failures
         if: always()
         uses: actions/upload-artifact@v4

@@ -33,8 +33,8 @@ package android.content
 open class Context { val applicationContext: Context get() = this }
 KT
 cat > "$DIR/stubs/RepoCheck.kt" <<'KT'
-import app.gulp.android.core.data.*
-import app.gulp.android.core.domain.*
+import com.kmab.gulp.core.data.*
+import com.kmab.gulp.core.domain.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 class InMemoryDao : DrinkDao {
@@ -94,14 +94,14 @@ package android.util
 object Log { fun w(tag: String, message: String, tr: Throwable): Int = 0 }
 KT
 cat > "$DIR/stubs/Widget.kt" <<'KT'
-package app.gulp.android.widget
+package com.kmab.gulp.widget
 import android.content.Context
 object GulpWidgetRefresh { suspend fun refresh(context: Context) {} }
 KT
 kotlinc "$DIR/stubs/Room.kt" "$DIR/stubs/Context.kt" "$DIR/stubs/Log.kt" "$DIR/stubs/Widget.kt" "$DIR/stubs/RepoCheck.kt" \
-    app/src/main/java/app/gulp/android/core/domain/DrinkModels.kt \
-    app/src/main/java/app/gulp/android/core/domain/DrinkCsv.kt \
-    app/src/main/java/app/gulp/android/core/data/GulpDatabase.kt \
-    app/src/main/java/app/gulp/android/core/data/GulpRepository.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkCsv.kt \
+    app/src/main/java/com/kmab/gulp/core/data/GulpDatabase.kt \
+    app/src/main/java/com/kmab/gulp/core/data/GulpRepository.kt \
     -classpath "$COROUTINES" -include-runtime -d "$DIR/repo.jar"
 java -cp "$DIR/repo.jar:$COROUTINES" RepoCheckKt

@@ -2,7 +2,7 @@
 """Offline preflight for known native-compile failures; not a substitute for Gradle."""
 from pathlib import Path
 root = Path(__file__).resolve().parent.parent
-src = root/'app/src/main/java/app/gulp/android'
+src = root/'app/src/main/java/com/kmab/gulp'
 water = (src/'core/graphics/WaterAdaptiveContent.kt').read_text()
 assert 'clipPath(path) { this@drawWithContent.drawContent() }' in water
 assert 'clipPath(path) { drawContent() }' not in water

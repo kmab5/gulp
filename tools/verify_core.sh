@@ -6,8 +6,8 @@ command -v kotlinc >/dev/null || { echo 'kotlinc required' >&2; exit 1; }
 DIR="$(mktemp -d)"
 trap 'rm -rf "$DIR"' EXIT
 cat > "$DIR/TestMain.kt" <<'KT'
-import app.gulp.android.core.domain.RecordedProgress
-import app.gulp.android.core.navigation.GulpTab
+import com.kmab.gulp.core.domain.RecordedProgress
+import com.kmab.gulp.core.navigation.GulpTab
 fun main() {
     check(GulpTab.entries.map { it.label } == listOf("Home", "Reminders", "History", "Review", "Settings"))
     check(GulpTab.fromRoute("review") == GulpTab.REVIEW)
@@ -24,7 +24,7 @@ fun main() {
 }
 KT
 kotlinc \
-  app/src/main/java/app/gulp/android/core/domain/RecordedProgress.kt \
-  app/src/main/java/app/gulp/android/core/navigation/GulpTab.kt \
+  app/src/main/java/com/kmab/gulp/core/domain/RecordedProgress.kt \
+  app/src/main/java/com/kmab/gulp/core/navigation/GulpTab.kt \
   "$DIR/TestMain.kt" -include-runtime -d "$DIR/gulp-tests.jar"
 java -jar "$DIR/gulp-tests.jar"

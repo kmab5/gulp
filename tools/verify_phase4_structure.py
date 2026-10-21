@@ -3,7 +3,7 @@
 from pathlib import Path
 import xml.etree.ElementTree as ET
 root=Path(__file__).resolve().parent.parent
-src=root/'app/src/main/java/app/gulp/android'
+src=root/'app/src/main/java/com/kmab/gulp'
 manifest=root/'app/src/main/AndroidManifest.xml'
 text=manifest.read_text()
 a='http://schemas.android.com/apk/res/android'

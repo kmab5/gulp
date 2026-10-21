@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 DIR="$(mktemp -d)"; trap 'rm -rf "$DIR"' EXIT
 cat > "$DIR/Phase4Check.kt" <<'KT'
-import app.gulp.android.core.domain.*
+import com.kmab.gulp.core.domain.*
 import java.time.*
 fun main() {
  var checks=0
@@ -52,9 +52,9 @@ fun main() {
  println("PASS: $checks pure Kotlin reminder/date/DST/review/reference assertions")
 }
 KT
-kotlinc app/src/main/java/app/gulp/android/core/domain/DrinkModels.kt \
-  app/src/main/java/app/gulp/android/core/domain/ReminderRules.kt \
-  app/src/main/java/app/gulp/android/core/domain/ReviewRules.kt \
-  app/src/main/java/app/gulp/android/core/domain/TrackingReference.kt \
+kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+  app/src/main/java/com/kmab/gulp/core/domain/ReminderRules.kt \
+  app/src/main/java/com/kmab/gulp/core/domain/ReviewRules.kt \
+  app/src/main/java/com/kmab/gulp/core/domain/TrackingReference.kt \
   "$DIR/Phase4Check.kt" -include-runtime -d "$DIR/phase4.jar"
 java -jar "$DIR/phase4.jar"

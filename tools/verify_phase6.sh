@@ -5,8 +5,8 @@ cd "$(dirname "$0")/.."
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 cat > "$TMP/Regression.kt" <<'KT'
-import app.gulp.android.core.domain.*
-import app.gulp.android.core.graphics.*
+import com.kmab.gulp.core.domain.*
+import com.kmab.gulp.core.graphics.*
 import java.time.*
 import kotlin.math.abs
 
@@ -50,9 +50,9 @@ fun main() {
 }
 KT
 kotlinc \
-    app/src/main/java/app/gulp/android/core/domain/DrinkModels.kt \
-    app/src/main/java/app/gulp/android/core/domain/ReminderRules.kt \
-    app/src/main/java/app/gulp/android/core/graphics/WaterMath.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/ReminderRules.kt \
+    app/src/main/java/com/kmab/gulp/core/graphics/WaterMath.kt \
     "$TMP/Regression.kt" -include-runtime -d "$TMP/check.jar"
 java -jar "$TMP/check.jar"
 python3 - <<'PY'
@@ -73,20 +73,20 @@ assert libs['versions']['kotlin']=='2.2.21'
 assert libs['versions']['ksp']=='2.2.21-2.0.5'
 assert libs['plugins']['ksp']['version']['ref']=='ksp'
 assert (root/'gradle/wrapper/gradle-wrapper.properties').exists()
-assert '0.6.2-rc3' in (root/'app/build.gradle.kts').read_text()
-main=(root/'app/src/main/java/app/gulp/android/MainActivity.kt').read_text()
+assert '0.6.3-rc4' in (root/'app/build.gradle.kts').read_text()
+main=(root/'app/src/main/java/com/kmab/gulp/MainActivity.kt').read_text()
 assert 'nextReminderLabel = nextReminderLabel' in main
 assert 'if (plan.enabled && !preferences.clinicianManagedFluids && !notificationPermission)' in main
 assert 'homeEditRequest += 1' in main
 assert 'onEditRequestHandled' in main
-prefs=(root/'app/src/main/java/app/gulp/android/core/data/GulpPreferences.kt').read_text()
+prefs=(root/'app/src/main/java/com/kmab/gulp/core/data/GulpPreferences.kt').read_text()
 assert 'plan.enabled && p[medicalKey] != true' in prefs
 assert 'p[reminderEnabled] = false' in prefs
-sched=(root/'app/src/main/java/app/gulp/android/core/reminders/GulpReminderScheduler.kt').read_text()
+sched=(root/'app/src/main/java/com/kmab/gulp/core/reminders/GulpReminderScheduler.kt').read_text()
 assert 'cancelAlarm(context)' in sched and 'clearNotification(context)' in sched
 assert 'if (!current.enabled)' in sched
-assert 'androidx.compose.ui.input.pointer.consume' not in (root/'app/src/main/java/app/gulp/android/feature/home/HomeScreen.kt').read_text()
-assert 'LocalDate.of(year, month + 1, day)' in (root/'app/src/main/java/app/gulp/android/feature/home/DrinkEditorSheet.kt').read_text()
+assert 'androidx.compose.ui.input.pointer.consume' not in (root/'app/src/main/java/com/kmab/gulp/feature/home/HomeScreen.kt').read_text()
+assert 'LocalDate.of(year, month + 1, day)' in (root/'app/src/main/java/com/kmab/gulp/feature/home/DrinkEditorSheet.kt').read_text()
 for path in (root/'app/src/main/res').rglob('*.xml'): ET.parse(path)
 print('PASS: Phase 6 manifest, Android build files, medical safety and UI integration checks')
 PY
