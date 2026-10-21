@@ -14,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kmab.gulp.core.design.GulpChoiceChip
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.domain.DrinkKind
 import com.kmab.gulp.core.domain.DrinkRecord
@@ -67,8 +67,8 @@ fun DrinkEditorSheet(
             Text(if (existing == null) "Add a drink" else "Edit drink", fontSize = 26.sp, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 DrinkKind.entries.forEach { kind ->
-                    FilterChip(selected = type == kind, onClick = { type = kind },
-                        label = { Text(kind.title, fontSize = 12.sp) })
+                    GulpChoiceChip(label = kind.title, selected = type == kind,
+                        onClick = { type = kind })
                 }
             }
             OutlinedTextField(value = text, onValueChange = { value ->
@@ -80,12 +80,12 @@ fun DrinkEditorSheet(
                 modifier = Modifier.fillMaxWidth())
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(onClick = {
-                    DatePickerDialog(context, { _, year, month, day ->
+                    DatePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, year, month, day ->
                         localTime = java.time.LocalDate.of(year, month + 1, day).atTime(localTime.toLocalTime())
                     }, localTime.year, localTime.monthValue - 1, localTime.dayOfMonth).show()
                 }) { Text(localTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))) }
                 TextButton(onClick = {
-                    TimePickerDialog(context, { _, hour, minute ->
+                    TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, hour, minute ->
                         localTime = localTime.withHour(hour).withMinute(minute)
                     }, localTime.hour, localTime.minute, true).show()
                 }) { Text(localTime.format(DateTimeFormatter.ofPattern("HH:mm"))) }

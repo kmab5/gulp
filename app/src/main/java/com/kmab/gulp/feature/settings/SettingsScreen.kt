@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +21,7 @@ import com.kmab.gulp.core.design.FrostPanel
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.design.Note
 import com.kmab.gulp.core.design.PreferenceRow
+import com.kmab.gulp.core.design.GulpToggleRow
 import com.kmab.gulp.core.domain.TrackingReference
 import com.kmab.gulp.core.graphics.WaterAdaptiveText
 import com.kmab.gulp.core.graphics.WaterScene
@@ -61,11 +60,9 @@ fun SettingsScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Tracking", color = GulpPalette.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
                 Note("Optional comparison for drinks you log. It doesn't measure hydration.")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Medical fluid plan", color = GulpPalette.White, modifier = Modifier.weight(1f))
-                    Checkbox(checked = preferences.clinicianManagedFluids,
-                        onCheckedChange = { onTrackingChange(preferences.trackingReferenceMl, it) })
-                }
+                GulpToggleRow("Medical fluid plan", "Use your clinician's fluid instructions",
+                    checked = preferences.clinicianManagedFluids,
+                    onCheckedChange = { onTrackingChange(preferences.trackingReferenceMl, it) })
                 if (preferences.clinicianManagedFluids) {
                     Note("Follow your clinician's fluid guidance. Generic goals and drinking reminders are disabled until you switch this off.")
                 } else {
@@ -126,13 +123,6 @@ fun SettingsScreen(
 
 @Composable
 private fun AppearanceToggle(label: String, supporting: String, selected: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 7.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(label, color = GulpPalette.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Note(supporting)
-        }
-        Switch(checked = selected, onCheckedChange = onChange)
-    }
+    GulpToggleRow(label, supporting, checked = selected, onCheckedChange = onChange,
+        modifier = Modifier.padding(vertical = 6.dp))
 }

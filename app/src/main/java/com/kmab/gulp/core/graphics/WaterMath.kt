@@ -18,7 +18,7 @@ object WaterMath {
         val nx = x.coerceIn(0f, 1f)
         val baseline = 1f - visibleFill(fill)
         if (!animate) return baseline
-        val lean = (nx - 0.5f) * tilt.coerceIn(-1f, 1f) * 0.14f
+        val lean = (nx - 0.5f) * tilt.coerceIn(-1f, 1f) * 0.32f
         val idle = sin(nx * TAU * 1.65f - seconds * 1.25f) * 0.0035f +
             sin(nx * TAU * 2.55f + seconds * 0.78f) * 0.0017f
         var impulseOffset = 0f

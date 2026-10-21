@@ -11,8 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +24,8 @@ import com.kmab.gulp.core.data.GulpPreferences
 import com.kmab.gulp.core.design.FrostPanel
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.design.Note
+import com.kmab.gulp.core.design.GulpToggleRow
+import com.kmab.gulp.core.design.GulpChoiceChip
 import com.kmab.gulp.core.domain.ReminderPlan
 import com.kmab.gulp.core.domain.ReminderRules
 import com.kmab.gulp.core.graphics.WaterAdaptiveText
@@ -54,11 +54,9 @@ fun RemindersScreen(
                     .atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE, HH:mm")),
                     color = GulpPalette.Glacier, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                 Note("Times are approximate. Android may delay notifications to save battery.")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Reminders on", color = GulpPalette.White)
-                    Switch(plan.enabled, enabled = !preferences.clinicianManagedFluids,
-                        onCheckedChange = { onPlanChange(plan.copy(enabled = it, snoozeUntilMillis = 0)) })
-                }
+                GulpToggleRow("Reminders on", "Pause or resume notifications",
+                    checked = plan.enabled, enabled = !preferences.clinicianManagedFluids,
+                    onCheckedChange = { onPlanChange(plan.copy(enabled = it, snoozeUntilMillis = 0)) })
             }
         }
         if (preferences.clinicianManagedFluids) {
@@ -83,9 +81,10 @@ fun RemindersScreen(
                 listOf(60,90,120,180,240).chunked(3).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { amount ->
-                            FilterChip(selected = plan.intervalMinutes == amount, onClick = {
-                                onPlanChange(plan.copy(intervalMinutes = amount, snoozeUntilMillis = 0))
-                            }, label = { Text(if (amount < 120) "$amount min" else "${amount / 60} hr") })
+                            GulpChoiceChip(label = if (amount < 120) "$amount min" else "${amount / 60} hr",
+                                selected = plan.intervalMinutes == amount, onClick = {
+                                    onPlanChange(plan.copy(intervalMinutes = amount, snoozeUntilMillis = 0))
+                                })
                         }
                     }
                 }
@@ -98,13 +97,13 @@ fun RemindersScreen(
                 Note("You won't get drink notifications outside these hours.")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     TextButton(onClick = {
-                        TimePickerDialog(context, { _, h, m ->
+                        TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, h, m ->
                             val changed = plan.copy(awakeStartMinute = h * 60 + m, snoozeUntilMillis = 0)
                             if (changed.valid()) onPlanChange(changed)
                         }, plan.awakeStartMinute / 60, plan.awakeStartMinute % 60, true).show()
                     }) { Text("From ${ReminderRules.formatMinute(plan.awakeStartMinute)}") }
                     TextButton(onClick = {
-                        TimePickerDialog(context, { _, h, m ->
+                        TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, h, m ->
                             val changed = plan.copy(awakeEndMinute = h * 60 + m, snoozeUntilMillis = 0)
                             if (changed.valid()) onPlanChange(changed)
                         }, plan.awakeEndMinute / 60, plan.awakeEndMinute % 60, true).show()

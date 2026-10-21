@@ -9,10 +9,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -26,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kmab.gulp.core.design.GulpChoiceChip
+import com.kmab.gulp.core.design.GulpToggleRow
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.domain.DrinkKind
 import com.kmab.gulp.core.domain.DrinkRules
@@ -49,8 +49,8 @@ fun TileEditorSheet(
             Text(if (tile == null) "New shortcut" else "Edit shortcut", fontSize = 25.sp, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 DrinkKind.entries.forEach { option ->
-                    FilterChip(selected = kind == option, onClick = { kind = option },
-                        label = { Text(option.title, fontSize = 12.sp) })
+                    GulpChoiceChip(label = option.title, selected = kind == option,
+                        onClick = { kind = option })
                 }
             }
             OutlinedTextField(value = amount, onValueChange = { value ->
@@ -59,10 +59,8 @@ fun TileEditorSheet(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = amount.isNotEmpty() && ml == null,
                 modifier = Modifier.fillMaxWidth())
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Wide tile", fontWeight = FontWeight.Medium)
-                Switch(checked = wide, onCheckedChange = { wide = it })
-            }
+            GulpToggleRow("Wide tile", "Make this shortcut span two columns",
+                checked = wide, onCheckedChange = { wide = it })
             Button(onClick = { ml?.let { onSave(kind, it, wide) } }, enabled = ml != null,
                 colors = ButtonDefaults.buttonColors(containerColor = GulpPalette.Glacier, contentColor = GulpPalette.Ink),
                 modifier = Modifier.fillMaxWidth()) { Text("Save shortcut", fontWeight = FontWeight.Bold) }

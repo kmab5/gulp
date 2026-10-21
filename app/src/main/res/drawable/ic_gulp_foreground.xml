@@ -1,6 +1,17 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#C7FFF2" android:pathData="M54,19 C35,19 20,34 20,54 C20,74 35,89 54,89 C73,89 88,74 88,54 C88,35 73,19 54,19 Z"/>
-    <path android:fillColor="#0E5867" android:pathData="M31,54 C37,47 45,48 54,54 C63,60 71,61 77,54 L77,65 C69,75 61,79 54,79 C40,79 31,69 31,54 Z"/>
-    <path android:fillColor="#0E5867" android:pathData="M48,31 C52,26 57,26 60,31 C63,35 61,40 54,45 C47,40 44,35 48,31 Z"/>
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Every painted point stays in the adaptive icon's central safe region. -->
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#B8FFF2" android:strokeWidth="7.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M71,44 C65,32 48,30 38,40 C28,50 32,68 44,73 C54,78 65,70 67,59"/>
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#68DCE5" android:strokeWidth="7.6"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M71,39 L71,66 C71,76 65,80 54,80 C49,80 45,79 42,77"/>
+    <path android:fillColor="#DAFFFE"
+        android:pathData="M55,43 C50,48 46,52 46,56 C46,61 50,65 55,65 C60,65 64,61 64,56 C64,52 60,48 55,43 Z"/>
+    <path android:fillColor="#3385AB"
+        android:pathData="M49,57 C52,54 58,54 61,58 C60,62 57,63 54,63 C51,63 49,61 49,57 Z"/>
 </vector>

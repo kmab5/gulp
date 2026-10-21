@@ -1,9 +1,10 @@
 <resources>
-    <style name="Theme.Gulp" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.Gulp" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowBackground">#09192A</item>
+        <item name="android:colorAccent">#80E9E3</item>
     </style>
 </resources>
