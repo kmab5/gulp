@@ -64,6 +64,13 @@ require('onLogShortcut' in (pkg/'feature/home/HomeScreen.kt').read_text(), 'Home
 require('repo' in (root/'docs/PHASE3_ARCHITECTURE.md').read_text().lower(), 'Phase 3 data documentation missing')
 require((root/'tools/verify_phase3.sh').exists(), 'Phase 3 smoke tests missing')
 
+legacy_sources = root / "app/src/main/java/app/gulp/android"
+
+require(
+    not any(legacy_sources.rglob("*.kt")),
+    "Legacy Kotlin files remain in the old package directory"
+)
+
 if problems:
     for p in problems:
         print('FAIL:', p, file=sys.stderr)
