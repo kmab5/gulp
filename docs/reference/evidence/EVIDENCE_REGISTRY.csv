@@ -1,0 +1,13 @@
+source,doi,evidence_type,finding_scope,grade_provisional,product_decision,url
+EFSA 2010,10.2903/j.efsa.2010.1459,Authority,adult total-water reference,A,Do not treat as required drink-only quota,https://doi.org/10.2903/j.efsa.2010.1459
+NASEM 2005,10.17226/10925,Authority,adult adequate-intake total-water,A,No universal eight glasses,https://doi.org/10.17226/10925
+Yamada 2022,10.1126/science.abm8668,Observational isotopic study,water-turnover varies,B,avoid simplistic individualized dose,https://doi.org/10.1126/science.abm8668
+Reeves 2023,10.53520/jen2023.103142,Small randomized pilot,reminder/tracker increases recording/intake report,C,no optimal cadence conclusion,https://doi.org/10.53520/jen2023.103142
+Lally 2010,10.1002/ejsp.674,Habit observational study,contextual repetition and missed opportunity,B,no punitive streaks,https://doi.org/10.1002/ejsp.674
+Killer 2014,10.1371/journal.pone.0084154,Controlled crossover,coffee fluid contribution,B,count coffee as fluid,https://doi.org/10.1371/journal.pone.0084154
+Maughan 2016,10.3945/ajcn.115.114769,Experimental trial,beverage hydration index,B,different drinks count as fluid; no arbitrary multipliers,https://doi.org/10.3945/ajcn.115.114769
+Hew-Butler 2015,10.1136/bjsports-2015-095004,Expert consensus,exercise-associated hyponatremia,A,avoid forced overdrinking,https://doi.org/10.1136/bjsports-2015-095004
+Hooton 2018,10.1001/jamainternmed.2018.4204,Randomized trial,recurrent cystitis selected population,B,no universal prevention promise,https://doi.org/10.1001/jamainternmed.2018.4204
+Hakam 2024,10.1001/jamanetworkopen.2024.47621,Systematic review,18 trials; limited outcome certainty,A,no generalized clinical promises,https://doi.org/10.1001/jamanetworkopen.2024.47621
+Desai 2026 PUSH,10.1016/S0140-6736(25)02637-6,Randomized trial,stone recurrence adherence intervention,B,respect limitations and achieved targets,https://doi.org/10.1016/S0140-6736(25)02637-6
+Kostelnik 2021,10.1080/07315724.2020.1750073,Review,urine color validity,B,not a standalone diagnosis,https://doi.org/10.1080/07315724.2020.1750073
