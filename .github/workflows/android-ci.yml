@@ -15,18 +15,21 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
       - uses: android-actions/setup-android@v3
       - name: Install Android API 36
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
-      - name: Verify bootstrap and build
+      - name: Unit tests, lint, and debug APK
         run: |
-          ./gradlew --version
-          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+          gradle --version
+          gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: gulp-phase1-debug
+          name: gulp-phase2-debug
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

@@ -16,6 +16,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntSize
+import app.gulp.android.core.graphics.WaterScene
+import app.gulp.android.core.graphics.WaterAdaptiveText
 import app.gulp.android.core.design.FrostPanel
 import app.gulp.android.core.design.GulpPalette
 import app.gulp.android.core.design.Note
@@ -23,10 +26,10 @@ import app.gulp.android.core.design.SectionHeader
 
 /** No fabricated bar data: the empty chart contains only a baseline. */
 @Composable
-fun ReviewScreen() {
+fun ReviewScreen(scene: WaterScene, viewport: IntSize) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        SectionHeader("Review")
+        WaterAdaptiveText("Review", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 20.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("This week", color = GulpPalette.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -44,6 +47,6 @@ fun ReviewScreen() {
                 Note("Once you begin logging, this page will show weekly trends, favorite drinks, and how often you recorded a drink.")
             }
         }
-        Note("Reports describe what you recorded, not a medical hydration score.")
+        WaterAdaptiveText("Reports describe what you recorded, not a medical hydration score.", scene, viewport, fontSize = 12.sp)
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Phase 1 intentionally requests NO internet, notification, sensor or tracking permissions. -->
+    <!-- No internet permission. Gravity/accelerometer access requires no runtime permission. -->
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"

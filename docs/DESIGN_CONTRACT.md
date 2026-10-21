@@ -38,3 +38,16 @@ This contract overrides the rejected first STILLWATER concept and any conflictin
 - Approved static mockups from design exploration 02, kept under `docs/reference/` for visual comparison.
 - This signed-off contract supersedes the mockups where they conflict: **five tabs, fully seamless navbar, live text mask, background water touch feedback, gulp branding**.
 - This Phase 1 implementation is intentionally a scaffolding view. `StaticWaterBackdrop.kt` is not the approved water-engine implementation.
+
+## Phase 2 engine (implemented, not yet approved on device)
+- Geometry: `WaterMath.surfaceY` is shared by `WaterBackdrop` and `waterBelowClip`.
+  Light glyphs are painted first; underwater ink is painted by a clipped second drawing.
+- Touch: a parent observes the *Initial* pass without consuming any pointer events.
+- Gravity: sensor listener exists only while activity is resumed and motion is enabled;
+  gravity sensor is preferred, accelerometer fallback. Missing sensor means calm water.
+- Scene state survives navigation and animations are interruptible via smooth state
+  updates and spring-based nav selection. Four atmospheric actions remain previews.
+- Minimum underwater layer is decorative; it is not a user hydration indicator.
+- Shader-free Compose Canvas baseline serves API 28+; on-device profiling remains required.
+- The Water preview dialog exposes fill and reduced-motion controls for testing only.
+- User's design preferences about bottom-center radial-only optional haze and no island remain binding.

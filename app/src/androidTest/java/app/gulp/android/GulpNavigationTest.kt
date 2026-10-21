@@ -23,4 +23,10 @@ class GulpNavigationTest {
         rule.onNodeWithText("Add a drink").performClick()
         rule.onNodeWithText("Preview build").assertIsDisplayed()
     }
+    @Test fun waterLabShowsMotionAndFillControls() {
+        rule.onNodeWithContentDescription("Home").performClick()
+        rule.onNodeWithText("Try water effects").performClick()
+        rule.onNodeWithText("Water preview").assertIsDisplayed()
+        rule.onNodeWithText("Reduce motion").assertIsDisplayed()
+    }
 }

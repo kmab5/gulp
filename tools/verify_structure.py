@@ -27,7 +27,7 @@ for phrase in ('compileSdk = 36', 'minSdk = 28', 'targetSdk = 36', 'namespace = 
     require(phrase in appgradle, f'Missing build setting {phrase}')
 
 pkg = root / 'app/src/main/java/app/gulp/android'
-for rel in ('MainActivity.kt','core/graphics/StaticWaterBackdrop.kt','core/navigation/GulpNav.kt','core/navigation/GulpTab.kt','core/domain/RecordedProgress.kt','feature/home/HomeScreen.kt','feature/reminders/RemindersScreen.kt','feature/history/HistoryScreen.kt','feature/review/ReviewScreen.kt','feature/settings/SettingsScreen.kt'):
+for rel in ('MainActivity.kt','core/graphics/WaterBackdrop.kt','core/graphics/WaterMath.kt','core/graphics/WaterScene.kt','core/graphics/WaterAdaptiveContent.kt','core/graphics/WaterSensors.kt','core/graphics/WaterInput.kt','core/navigation/GulpNav.kt','core/navigation/GulpTab.kt','core/domain/RecordedProgress.kt','feature/home/HomeScreen.kt','feature/reminders/RemindersScreen.kt','feature/history/HistoryScreen.kt','feature/review/ReviewScreen.kt','feature/settings/SettingsScreen.kt'):
     require((pkg / rel).is_file(), f'Missing {rel}')
 
 for label in ('Home','Reminders','History','Review','Settings'):
@@ -39,6 +39,12 @@ manifest = (root / 'app/src/main/AndroidManifest.xml').read_text()
 require('android.permission.INTERNET' not in manifest, 'Unexpected network permission')
 require('android:exported="true"' in manifest, 'No launch activity')
 require((root / '.github/workflows/android-ci.yml').is_file(), 'Missing CI')
+require(not (pkg / 'core/graphics/StaticWaterBackdrop.kt').exists(), 'Old water renderer still in tree')
+require('WaterBackdrop(scene)' in (pkg/'MainActivity.kt').read_text(), 'Liquid renderer not connected')
+require('waterTouchFeedback(scene)' in (pkg/'MainActivity.kt').read_text(), 'Touch water feedback not connected')
+require('WaterTiltSensor(scene, active)' in (pkg/'MainActivity.kt').read_text(), 'Sensor lifecycle not connected')
+require('WaterAdaptiveText' in (pkg/'core/navigation/GulpNav.kt').read_text(), 'Adaptive nav label missing')
+require((root/'tools/verify_water.sh').is_file(), 'Water verification script missing')
 # Guard against accidental publication of the retired name in live Android/Kotlin resources.
 for path in [*pkg.rglob('*.kt'), *(root/'app/src/main/res').rglob('*.xml')]:
     require('STILLWATER' not in path.read_text(), f'Retired brand in {path.name}')

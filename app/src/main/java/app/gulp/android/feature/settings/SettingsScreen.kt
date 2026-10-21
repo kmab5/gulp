@@ -13,6 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntSize
+import app.gulp.android.core.graphics.WaterScene
+import app.gulp.android.core.graphics.WaterAdaptiveText
 import app.gulp.android.core.design.FrostPanel
 import app.gulp.android.core.design.GulpPalette
 import app.gulp.android.core.design.Note
@@ -20,10 +23,10 @@ import app.gulp.android.core.design.PreferenceRow
 import app.gulp.android.core.design.SectionHeader
 
 @Composable
-fun SettingsScreen(onPreviewAction: () -> Unit) {
+fun SettingsScreen(scene: WaterScene, viewport: IntSize, onPreviewAction: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
         verticalArrangement = Arrangement.spacedBy(19.dp)) {
-        SectionHeader("Settings")
+        WaterAdaptiveText("Settings", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 20.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Your home screen", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = GulpPalette.White)
@@ -31,7 +34,7 @@ fun SettingsScreen(onPreviewAction: () -> Unit) {
                 PreferenceRow("Customize Home", null, onPreviewAction)
             }
         }
-        Text("Preferences", color = GulpPalette.SoftWhite, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        WaterAdaptiveText("Preferences", scene, viewport, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {
             Column {
                 PreferenceRow("Bottles and cups", null, onPreviewAction)
@@ -40,13 +43,13 @@ fun SettingsScreen(onPreviewAction: () -> Unit) {
                 PreferenceRow("Accessibility", null, onPreviewAction)
             }
         }
-        Text("Data and privacy", color = GulpPalette.SoftWhite, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        WaterAdaptiveText("Data and privacy", scene, viewport, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {
             Column {
                 PreferenceRow("Export your drinks", null, onPreviewAction)
                 PreferenceRow("Delete your data", null, onPreviewAction)
             }
         }
-        Note("gulp · Phase 1 foundation preview")
+        WaterAdaptiveText("gulp · Phase 2 water preview", scene, viewport, fontSize = 12.sp)
     }
 }

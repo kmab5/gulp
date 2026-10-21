@@ -1,3 +1,5 @@
+> Historical Phase 1 document: the static water renderer described here has been replaced by Phase 2; see PHASE2_ARCHITECTURE.md.
+
 # Phase 1 architecture and technical decisions
 
 ## Deliberately small app architecture

@@ -15,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntSize
+import app.gulp.android.core.graphics.WaterScene
+import app.gulp.android.core.graphics.WaterAdaptiveText
 import app.gulp.android.core.design.FrostPanel
 import app.gulp.android.core.design.GulpPalette
 import app.gulp.android.core.design.Note
@@ -22,10 +25,10 @@ import app.gulp.android.core.design.PreferenceRow
 import app.gulp.android.core.design.SectionHeader
 
 @Composable
-fun RemindersScreen(onPreviewAction: () -> Unit) {
+fun RemindersScreen(scene: WaterScene, viewport: IntSize, onPreviewAction: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        SectionHeader("Reminders")
+        WaterAdaptiveText("Reminders", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 22.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("NEXT REMINDER", fontSize = 11.sp, letterSpacing = 1.sp, color = GulpPalette.SoftWhite)
@@ -34,7 +37,7 @@ fun RemindersScreen(onPreviewAction: () -> Unit) {
             }
         }
         Spacer(Modifier.height(1.dp))
-        Text("Your day", color = GulpPalette.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        WaterAdaptiveText("Your day", scene, viewport, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 16.dp) {
             Column {
                 PreferenceRow("Reminder interval", "Choose how often to receive a prompt", onPreviewAction)
@@ -42,6 +45,6 @@ fun RemindersScreen(onPreviewAction: () -> Unit) {
                 PreferenceRow("Pause reminders", null, onPreviewAction)
             }
         }
-        Note("Intervals are reminders, not required drinking times.")
+        WaterAdaptiveText("Intervals are reminders, not required drinking times.", scene, viewport, fontSize = 12.sp)
     }
 }

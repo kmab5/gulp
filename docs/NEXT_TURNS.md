@@ -1,15 +1,14 @@
-# Project roadmap state
+# Next steps after Phase 2
 
-Phase 1 (Turns 1–3): Android project, architecture, approved design contract, five-tab Compose shell, test/CI infrastructure — **source delivered** (device build pending external SDK verification).
+**Phase 2 implementation is in this repository.** It is not complete until Android builds and physical-device motion tests pass.
 
-Phase 2 (Turns 4–11): water engine: graphics foundation, touch impulse physics, tilt/gravity, realistic fill, live text mask, nav indicator animation, device measurements. No data layer coupling.
+Phase 3 / Home + data:
+- Real drink log store, editing, undo, multiple drink presets and user-chosen references.
+- Replace preview fill and preview dialog action with tracked volume-to-reference mappings; never overwrite the decorative minimum floor.
+- Drag-to-reorder and resize configurable Home tiles, including accessibility fallback.
+- Maintain water scene and animated transitions when changing tabs.
 
-Phase 3 (Turns 12–16): Home primary actions, quantity and drink entry UI, Room ledger, undo, user-adjustable Bento quick tiles.
+Do not add health claims or infer hydration percentage from the animated water.
+See `PHASE2_RELEASE_CHECKLIST.md` for acceptance tests.
 
-Phase 4 (Turns 17–23): onboarding, real reminders, quiet hours, History, Review, safety/rules integration.
-
-Phase 5 (Turns 24–28): settings, accessibility, privacy controls, native Android home-screen widgets (required in first complete release).
-
-Phase 6 (Turns 29–32): instrumentation, real device tests, size and battery optimization, debug and release artifacts.
-
-Final physical device refinements: 4–8 estimated additional turns, not a guarantee. Work cannot honestly be marked release-complete until it passes device review.
+Phase 5 and Phase 6 include compact and large native Android **home-screen widgets in the first full release**; those are not deferred to a second product release.
