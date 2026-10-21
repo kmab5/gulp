@@ -56,6 +56,10 @@ import com.kmab.gulp.core.design.GulpChoiceChip
 import com.kmab.gulp.core.design.GulpChoiceRow
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.design.GulpToggleRow
+import com.kmab.gulp.core.design.GulpMedicalPlanCard
+import com.kmab.gulp.core.graphics.WaterScene
+import com.kmab.gulp.core.graphics.WaterAdaptiveText
+import androidx.compose.ui.unit.IntSize
 import com.kmab.gulp.core.design.Note
 import com.kmab.gulp.core.design.PrimaryAction
 import com.kmab.gulp.core.domain.ReminderPlan
@@ -64,7 +68,7 @@ import com.kmab.gulp.core.domain.TrackingReference
 
 /** Functional controls with a consistent dark surface, not OS-default white widgets. */
 @Composable
-fun OnboardingScreen(onComplete: (ReminderPlan, Int, Boolean) -> Unit) {
+fun OnboardingScreen(scene: WaterScene, viewport: IntSize, onComplete: (ReminderPlan, Int, Boolean) -> Unit) {
     val context = LocalContext.current
     var step by remember { mutableIntStateOf(0) }
     var remindersEnabled by remember { mutableStateOf(false) }
@@ -91,7 +95,7 @@ fun OnboardingScreen(onComplete: (ReminderPlan, Int, Boolean) -> Unit) {
                 Text(if (step > 0) "‹" else "g", color = GulpPalette.White,
                     fontWeight = FontWeight.Bold, fontSize = if (step > 0) 32.sp else 28.sp)
             }
-            Text("${step + 1} of 3", color = GulpPalette.White, fontSize = 15.sp,
+            WaterAdaptiveText("${step + 1} of 3", scene, viewport, fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold)
         }
         Spacer(Modifier.height(17.dp))
@@ -115,13 +119,13 @@ fun OnboardingScreen(onComplete: (ReminderPlan, Int, Boolean) -> Unit) {
                         1 -> "Daily goal"
                         else -> "You're ready"
                     }
-                    Text(title, fontSize = 34.sp, lineHeight = 39.sp, fontWeight = FontWeight.Bold,
-                        color = GulpPalette.White, textAlign = TextAlign.Center)
-                    Text(when (current) {
+                    WaterAdaptiveText(title, scene, viewport, fontSize = 34.sp, lineHeight = 39.sp,
+                        fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    WaterAdaptiveText(when (current) {
                         0 -> "Get gentle reminders during your day."
                         1 -> "Choose an optional amount to compare with your drinks."
                         else -> "You can change everything later."
-                    }, fontSize = 16.sp, lineHeight = 23.sp, color = GulpPalette.White,
+                    }, scene, viewport, fontSize = 16.sp, lineHeight = 23.sp,
                         textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 15.dp))
                     when (current) {
                         0 -> {
@@ -201,8 +205,7 @@ fun OnboardingScreen(onComplete: (ReminderPlan, Int, Boolean) -> Unit) {
                             }
                             FrostPanel(Modifier.fillMaxWidth()) {
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    GulpToggleRow("I follow a medical fluid plan",
-                                        "Turn this on if a clinician has set your fluid intake.",
+                                    GulpMedicalPlanCard(
                                         checked = medicalPlan, onCheckedChange = {
                                             medicalPlan = it
                                             if (it) reference = TrackingReference.NONE
@@ -236,6 +239,7 @@ fun OnboardingScreen(onComplete: (ReminderPlan, Int, Boolean) -> Unit) {
         Spacer(Modifier.height(12.dp))
         PrimaryAction(if (step == 2) "Start using gulp" else "Continue",
             onClick = { if (step < 2) step++ else onComplete(plan, chosenReference, medicalPlan) },
+            enabled = canContinue,
             modifier = Modifier.heightIn(min = 58.dp)) {
             Text(if (step == 2) "Start using gulp  →" else "Continue  →",
                 color = GulpPalette.Ink, fontWeight = FontWeight.Bold, fontSize = 17.sp)

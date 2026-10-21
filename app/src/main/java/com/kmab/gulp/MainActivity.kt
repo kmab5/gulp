@@ -191,9 +191,9 @@ fun GulpApp(active: Boolean = true) {
     }
     LaunchedEffect(active) { notificationPermission = GulpReminderScheduler.notificationsAllowed(context) }
     if (!preferences.hasCompletedOnboarding) {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().onSizeChanged { viewport = it }) {
             WaterBackdrop(scene)
-            OnboardingScreen(onComplete = { plan, reference, medical ->
+            OnboardingScreen(scene, viewport, onComplete = { plan, reference, medical ->
                 scope.launch { preferencesStore.finishOnboarding(plan, reference, medical) }
                 if (plan.enabled && !medical && !notificationPermission) requestPermission()
             })

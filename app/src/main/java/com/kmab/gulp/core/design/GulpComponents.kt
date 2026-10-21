@@ -32,6 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -110,7 +113,24 @@ fun GulpToggleRow(label: String, supporting: String? = null, checked: Boolean,
                 lineHeight = 21.sp)
             if (supporting != null) Note(supporting)
         }
-        GulpToggle(checked, onCheckedChange, enabled = enabled)
+        GulpToggle(checked, onCheckedChange, enabled = enabled,
+            modifier = Modifier.semantics { contentDescription = label })
+    }
+}
+
+/** The medical-plan guard deserves stronger centered emphasis than an ordinary settings row. */
+@Composable
+fun GulpMedicalPlanCard(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("I follow a medical fluid plan", fontWeight = FontWeight.Bold, fontSize = 19.sp,
+            lineHeight = 25.sp, color = GulpPalette.White, textAlign = TextAlign.Center)
+        Text("A clinician has given me a specific fluid target or limit.",
+            fontSize = 14.sp, lineHeight = 20.sp, color = GulpPalette.SoftWhite,
+            textAlign = TextAlign.Center)
+        GulpToggle(checked, onCheckedChange,
+            modifier = Modifier.semantics { contentDescription = "I follow a medical fluid plan" })
     }
 }
 
@@ -136,20 +156,22 @@ fun GulpChoiceChip(label: String, selected: Boolean, onClick: () -> Unit,
 @Composable
 fun GulpChoiceRow(label: String, supporting: String? = null, selected: Boolean,
                   onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    val bg by animateColorAsState(if (selected) Color(0xFF326D82).copy(alpha = .87f)
+    val bg by animateColorAsState(if (selected) Color(0xFF5C4B42).copy(alpha = .88f)
         else Color(0xFF0C293F).copy(alpha = .46f), label = "choice highlight")
+    val ring by animateColorAsState(if (selected) Color(0xFFFFD38C)
+        else GulpPalette.Edge, label = "radio ring")
     Row(modifier.fillMaxWidth().heightIn(min = 61.dp)
         .background(bg, RoundedCornerShape(17.dp))
-        .border(1.dp, if (selected) GulpPalette.Glacier.copy(alpha = .8f)
+        .border(1.dp, if (selected) ring.copy(alpha = .9f)
             else Color.White.copy(alpha = .17f), RoundedCornerShape(17.dp))
         .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
         .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Canvas(Modifier.size(24.dp)) {
-            drawCircle(if (selected) GulpPalette.Glacier else GulpPalette.Edge,
+            drawCircle(ring,
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.8.dp.toPx()))
-            if (selected) drawCircle(GulpPalette.Glacier, radius = size.minDimension * .28f)
+            if (selected) drawCircle(ring, radius = size.minDimension * .28f)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, color = GulpPalette.White, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
@@ -160,12 +182,13 @@ fun GulpChoiceRow(label: String, supporting: String? = null, selected: Boolean,
 
 @Composable
 fun PrimaryAction(label: String, onClick: () -> Unit, modifier: Modifier = Modifier,
-                  content: @Composable (() -> Unit)? = null) {
+                  enabled: Boolean = true, content: @Composable (() -> Unit)? = null) {
     Box(modifier.fillMaxWidth().heightIn(min = 62.dp)
+        .graphicsLayer { alpha = if (enabled) 1f else .5f }
         .background(Brush.linearGradient(listOf(GulpPalette.Glacier, Color(0xFF71D6DC))),
             RoundedCornerShape(21.dp))
         .border(1.dp, Color.White.copy(alpha = .67f), RoundedCornerShape(21.dp))
-        .clickable(onClickLabel = label, onClick = onClick)
+        .clickable(enabled = enabled, onClickLabel = label, onClick = onClick)
         .padding(horizontal = 18.dp, vertical = 14.dp), contentAlignment = Alignment.Center) {
         if (content != null) content() else {
             Text("+  $label", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = GulpPalette.Ink)

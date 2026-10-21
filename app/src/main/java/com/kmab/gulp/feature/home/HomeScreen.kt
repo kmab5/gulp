@@ -4,9 +4,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -44,6 +47,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.drawscope.Stroke
+import android.os.SystemClock
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -92,6 +98,8 @@ fun HomeScreen(
     } + if (editing && draft.size < HomeTileRules.MAX_TILES) 1 else 0
     val rows = (gridUnits + 1) / 2
     val gridHeight = (rows * 112 - 12).coerceAtLeast(100)
+    val gridGuideAlpha by animateFloatAsState(if (editing) .38f else 0f,
+        animationSpec = tween(250), label = "edit grid guides")
 
     Column(Modifier.fillMaxSize().padding(horizontal = 22.dp).padding(top = 23.dp, bottom = 7.dp)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 18.dp),
@@ -143,11 +151,28 @@ fun HomeScreen(
                             fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
-                LazyVerticalGrid(
+                Box(Modifier.fillMaxWidth().height(gridHeight.dp).animateContentSize()) {
+                    // Visible bento slots stay fixed while the draggable tiles reflow over them.
+                    Canvas(Modifier.matchParentSize()) {
+                        if (gridGuideAlpha > .001f) {
+                            val gap = 10.dp.toPx()
+                            val rowStep = 112.dp.toPx()
+                            val tileHeight = 100.dp.toPx()
+                            val width = (size.width - gap) / 2f
+                            for (row in 0 until rows) for (col in 0..1) {
+                                drawRoundRect(color = GulpPalette.Glacier.copy(alpha = gridGuideAlpha),
+                                    topLeft = Offset(col * (width + gap), row * rowStep),
+                                    size = Size(width, tileHeight),
+                                    cornerRadius = CornerRadius(19.dp.toPx()),
+                                    style = Stroke(width = 1.dp.toPx()))
+                            }
+                        }
+                    }
+                    LazyVerticalGrid(
                     columns = GridCells.Fixed(2), userScrollEnabled = false,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth().height(gridHeight.dp).animateContentSize()
+                    modifier = Modifier.fillMaxWidth().height(gridHeight.dp)
                 ) {
                     items(items = displayed, key = { it.id },
                         span = { tile -> GridItemSpan(if (tile.wide) 2 else 1) }) { tile ->
@@ -176,13 +201,14 @@ fun HomeScreen(
                         }
                     }
                 }
+                } // grid guide overlay
                 AnimatedVisibility(editing, enter = fadeIn(), exit = fadeOut()) {
                     WaterAdaptiveText("Drag the handles to move tiles. Tap a tile to edit it.",
                         scene, viewport, fontSize = 12.sp)
                 }
             }
         }
-        Column(Modifier.fillMaxWidth().padding(top = 21.dp, bottom = 10.dp),
+        Column(Modifier.fillMaxWidth().padding(top = 29.dp, bottom = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
             WaterAdaptiveText("Today", scene, viewport, fontWeight = FontWeight.Medium, fontSize = 13.sp)
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -224,6 +250,7 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
     var motionX by remember(tile.id) { mutableFloatStateOf(0f) }
     var motionY by remember(tile.id) { mutableFloatStateOf(0f) }
     var lastHover by remember(tile.id) { mutableStateOf<String?>(null) }
+    var lastSwapTime by remember(tile.id) { androidx.compose.runtime.mutableLongStateOf(0L) }
     var dragging by remember(tile.id) { mutableStateOf(false) }
     var anchor by remember(tile.id) { mutableStateOf(Offset.Zero) }
     var layoutOrigin by remember(tile.id) { mutableStateOf<Offset?>(null) }
@@ -234,7 +261,7 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
         detectDragGesturesAfterLongPress(
             onDragStart = {
                 dragging = true
-                motionX = 0f; motionY = 0f; lastHover = null
+                motionX = 0f; motionY = 0f; lastHover = null; lastSwapTime = 0L
                 anchor = (currentPositions[tile.id]?.center ?: Offset.Zero)
             },
             onDrag = { change, delta ->
@@ -243,10 +270,17 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
                 motionX += delta.x; motionY += delta.y
                 val target = anchor + Offset(motionX, motionY)
                 val hovered = currentPositions.entries.firstOrNull { (id, rect) ->
-                    id != tile.id && rect.contains(target)
+                    // A center-inset hit zone avoids ping-pong swaps near tile borders.
+                    val insetX = rect.width * .16f
+                    val insetY = rect.height * .16f
+                    id != tile.id && target.x >= rect.left + insetX &&
+                        target.x <= rect.right - insetX &&
+                        target.y >= rect.top + insetY && target.y <= rect.bottom - insetY
                 }?.key
-                if (hovered != null && hovered != lastHover) {
+                val now = SystemClock.uptimeMillis()
+                if (hovered != null && hovered != lastHover && now - lastSwapTime >= 85L) {
                     lastHover = hovered
+                    lastSwapTime = now
                     currentMove(tile.id, hovered)
                 }
             },
@@ -288,7 +322,8 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
                 Box(Modifier.size(42.dp).then(dragHandler)
                     .semantics { contentDescription = "Drag ${tile.kind.title} shortcut" },
                     contentAlignment = Alignment.Center) {
-                    WaterAdaptiveText("⠿", scene, viewport, fontWeight = FontWeight.Bold, fontSize = 25.sp)
+                    WaterAdaptiveText("⠿", scene, viewport, fontWeight = FontWeight.Bold,
+                        fontSize = 27.sp, modifier = Modifier.padding(bottom = 2.dp))
                 }
             } else WaterAdaptiveText("+", scene, viewport, fontWeight = FontWeight.Bold, fontSize = 26.sp)
         }

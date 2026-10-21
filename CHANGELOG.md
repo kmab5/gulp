@@ -1,3 +1,13 @@
+## 0.6.4-rc5 — UI feedback audit and follow-up (2026-10-21)
+
+- Applied waterline-adaptive ink to exposed onboarding headings and step label (the frosted card text remains fixed high-contrast).
+- Made the medical fluid plan card centered and prominent; highlighted chosen radio items amber, distinct from teal switches.
+- Fixed onboarding continuation incorrectly accepting an invalid custom mL entry.
+- Added rounded translucent editing slot guides behind tiles and reduced drag-hover oscillation by requiring center overlap and minimum swap interval.
+- Increased navbar label size to reduce tiny glyph rasterization artifacts; real-device pixel clarity still needs review.
+- Updated release version, documentation and CI contract tests against the current `com.kmab.gulp` paths.
+- Deliberate visual alternatives and device-unverified behaviors are listed in `docs/UI_FEEDBACK_AUDIT.md`.
+
 ## 0.6.3-rc4 — package identity, JVM compile fix, signing
 
 - Fixed the WaterScene property-setter collision by renaming its method to `updateReducedMotion` and updating call sites.

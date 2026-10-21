@@ -40,3 +40,16 @@ The translucent panels use layered gradients, tinted translucency and specular b
 ## Build and packaging
 
 Run `./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` on the Android SDK-equipped machine. There was no Android SDK or Gradle resolution available in the authoring environment, so **native compilation and fluidity are not verified** here. Run the device checklist before approving any redesign of other tabs.
+
+## Review 02: additional device checks
+
+- [ ] With the water crossing the opening Reminders heading and step count, each character switches to readable submerged ink at the moving waterline.
+- [ ] The clinician-plan heading and its toggle are visually centered; disabling/enabling the plan remains accessible with TalkBack.
+- [ ] Radio choices use a warm amber focus indication distinct from the blue-green reminder switches.
+- [ ] Selecting Custom amount and entering a value outside 250–6000 mL visibly disables Continue; valid values re-enable it.
+- [ ] Home edit-mode guide slots fade into place and remain behind tiles as tiles reorder during a long-press drag.
+- [ ] Dragging over a neighbor's central area triggers live reflow without jitter at tile boundaries.
+- [ ] Nav labels remain legible at 360dp and 1.3× font scale. The adaptive waterline edge should not look like an outline.
+- [ ] Check the extra gap above Today and the top/bottom scroll fade at large accessibility font scales.
+
+See `UI_FEEDBACK_AUDIT.md` for the full item-by-item matrix, including intentional visual alternatives.

@@ -126,7 +126,7 @@ fun GulpNav(current: GulpTab, scene: WaterScene, viewport: IntSize,
                         }
                     }
                     Box(Modifier.graphicsLayer { alpha = labelAlpha }, contentAlignment = Alignment.Center) {
-                        WaterAdaptiveText(tab.label, scene, viewport, fontSize = 10.sp,
+                        WaterAdaptiveText(tab.label, scene, viewport, fontSize = 11.5.sp,
                             fontWeight = if (selectedTab) FontWeight.Bold else FontWeight.SemiBold,
                             maxLines = 1)
                     }

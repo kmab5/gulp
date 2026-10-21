@@ -1,8 +1,12 @@
 # gulp — native Android hydration app
 
-**Version 0.6.3-rc4 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
+**Version 0.6.4-rc5 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
 
 This is the **complete development repository** through all six planned coding phases, including the design reference screenshots, scientific guardrails, native animated water UI, customizable quick-add Home, Room-powered drink history, onboarding, notifications and quiet hours, Review analytics, Settings, CSV export/deletion and two Glance launcher widgets.
+
+## UI review 02: current state (2026-10-21)
+
+See [`docs/UI_FEEDBACK_AUDIT.md`](docs/UI_FEEDBACK_AUDIT.md) for every onboarding, navbar and Home review request, its status, intentional alternatives and outstanding on-device checks. Changes include onboarding water-aware labels and a centered medical-plan card, distinct amber radio selections, custom-goal validation, 2-column edit-grid outlines, stabilized live reordering, and a slightly larger navbar label. The initial launcher icon, custom controls, navbar glyphs and animations, and feathered scrolling were delivered in UI review 01 and remain in place. The project still uses an inexpensive translucent/sheen treatment rather than computing real-time blurred backdrop textures per tile. Full Android compilation and device rendering are **not verified in this handoff**.
 
 ## Package identity and signed releases
 

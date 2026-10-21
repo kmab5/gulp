@@ -35,3 +35,7 @@ Status: **Unverified Android release candidate source**. The authoring container
 ## Release boundary
 
 The debug variant uses `com.kmab.gulp.debug`; the eventual release uses `com.kmab.gulp`. Production signing, Play Store listing, policy review, and real-device performance measurements remain outside what can be honestly verified in this environment. **Do not publish without these checks.**
+
+## UI review 02 additional acceptance
+
+After the standard build succeeds, follow `docs/UI_FEEDBACK_AUDIT.md` and `docs/UI_REVIEW_DEVICE_CHECKLIST.md` for the current onboarding, navbar and Home review. The previous UI screens are no longer authoritative where they conflict with this review. These checks require human inspection on an actual Android device; static Kotlin tests cannot prove readability or animation continuity.

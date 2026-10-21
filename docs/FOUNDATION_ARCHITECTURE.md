@@ -5,7 +5,7 @@
 ## Deliberately small app architecture
 - One `:app` Gradle module; feature-oriented packages, domain objects separated from UI, native Android Kotlin/Compose UI.
 - All screen state in this foundation uses saveable Compose state. The selected tab survives config changes/process restoration where Android has state to restore. No global singleton navigation manager or invented backend.
-- `StaticWaterBackdrop` is drawn once below the screen transition box and navbar; replacing it with the Phase 2 stateful renderer requires no changes to feature interfaces.
+- `StaticWaterBackdrop` was the Phase 1 placeholder and has been deleted. The production source uses `WaterBackdrop` and `WaterScene`; this document otherwise records the original architecture plan.
 - Five labels in `GulpTab` form an ordinary user-facing vocabulary. Internal terminology never leaks into the navigation labels.
 - No login, API clients, ads, background services, runtime permissions or network dependencies in the app APK itself.
 - The app makes no health-related calculations yet. The pure `RecordedProgress` type is the future domain boundary and explicitly names *logged / reference* fraction, not hydration.
