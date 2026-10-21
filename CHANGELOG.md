@@ -1,3 +1,11 @@
+## 0.6.2-rc3 — Kotlin/Compose compilation corrections
+
+- Fixed waterline contrast's nested drawing scope: explicitly call `this@drawWithContent.drawContent()` in the `clipPath` block.
+- Added `@OptIn(ExperimentalMaterial3Api::class)` to `DrinkEditorSheet` and `TileEditorSheet`, preserving bottom-sheet behavior.
+- Migrated Kotlin compiler target configuration to the `kotlin.compilerOptions` DSL (JVM 17) to eliminate Gradle's deprecation warning.
+- Added `tools/verify_compose_buildfix.py` preflight and a CI step; previous source and references are untouched.
+- **Unverified until run in an Android SDK environment:** complete Gradle build, runtime behavior, and lint.
+
 ## 0.6.1-rc2 — Gradle/Kotlin first-build fixes
 
 - Fixed invalid uppercase Gradle version alias `KSP` (now `ksp`), and matching `version.ref`.

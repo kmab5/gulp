@@ -88,6 +88,6 @@ fun Modifier.waterBelowClip(scene: WaterScene, viewport: IntSize): Modifier {
             path.lineTo(w, h)
             path.lineTo(0f, h)
             path.close()
-            clipPath(path) { drawContent() }
+            clipPath(path) { this@drawWithContent.drawContent() }
         }
 }

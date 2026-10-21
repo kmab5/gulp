@@ -28,6 +28,7 @@ jobs:
       - name: Offline structural verification
         run: |
           python3 tools/verify_gradle_catalog.py
+          python3 tools/verify_compose_buildfix.py
           python3 tools/verify_structure.py
           python3 tools/verify_phase4_structure.py
           python3 tools/verify_phase5_structure.py

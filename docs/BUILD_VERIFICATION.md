@@ -1,3 +1,13 @@
+## v0.6.2-rc3 — follow-up to `:app:compileDebugKotlin` failure
+
+The reported Kotlin errors were in `WaterAdaptiveContent.kt`, `DrinkEditorSheet.kt`, and `TileEditorSheet.kt`. The outer drawing scope is now explicitly selected; both Material3 sheets have experimental API opt-ins. The deprecated JVM target DSL has been migrated. Run:
+
+```powershell
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug -Dorg.gradle.java.home="D:/Code/java/jdk-21.0.12.1"
+```
+
+The Java native-access notice, outdated SDK XML reader warning, and `stripDebugDebugSymbols` notice in the previous build output were **nonfatal warnings**. `:app:compileDebugKotlin` was the failure. Native Android compilation for this version remains unverified in the authoring environment. If the same errors persist after replacing the project, confirm that the extracted `app/src/main/java/...` files are from v0.6.2-rc3.
+
 # Build and verification history
 
 ## Phase 1

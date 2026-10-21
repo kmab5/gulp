@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -40,6 +41,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /** Create and edit share exactly the same validation and date/time controls. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DrinkEditorSheet(
     existing: DrinkRecord?,
