@@ -67,7 +67,7 @@ fun SettingsScreen(
                         onCheckedChange = { onTrackingChange(preferences.trackingReferenceMl, it) })
                 }
                 if (preferences.clinicianManagedFluids) {
-                    Note("Follow your clinician's fluid guidance. Generic comparison goals are disabled.")
+                    Note("Follow your clinician's fluid guidance. Generic goals and drinking reminders are disabled until you switch this off.")
                 } else {
                     listOf(0,1500,1875,2000,2500).forEach { amount ->
                         TextButton(onClick = { onTrackingChange(amount, false) }, modifier = Modifier.fillMaxWidth()) {

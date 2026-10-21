@@ -13,8 +13,8 @@ android {
         applicationId = "app.gulp.android"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.5.0-phase5"
+        versionCode = 6
+        versionName = "0.6.0-rc1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -62,6 +62,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)

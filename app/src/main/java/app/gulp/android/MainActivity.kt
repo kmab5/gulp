@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
@@ -62,6 +63,7 @@ import app.gulp.android.core.domain.DrinkKind
 import app.gulp.android.core.domain.DrinkRecord
 import app.gulp.android.core.domain.DrinkRules
 import app.gulp.android.core.domain.ReminderPlan
+import app.gulp.android.core.domain.ReminderRules
 import app.gulp.android.core.graphics.WaterBackdrop
 import app.gulp.android.core.graphics.WaterTiltSensor
 import app.gulp.android.core.graphics.rememberWaterScene
@@ -120,6 +122,7 @@ fun GulpApp(active: Boolean = true) {
     val scene = rememberWaterScene(active)
     var viewport by remember { mutableStateOf(IntSize.Zero) }
     var tabRoute by rememberSaveable { mutableStateOf(GulpTab.HOME.route) }
+    var homeEditRequest by remember { mutableIntStateOf(0) }
     val tab = GulpTab.fromRoute(tabRoute)
     var showWaterLab by rememberSaveable { mutableStateOf(false) }
     var systemReduced by remember { mutableStateOf(false) }
@@ -132,6 +135,16 @@ fun GulpApp(active: Boolean = true) {
     val zone = ZoneId.systemDefault()
     val today = Instant.ofEpochMilli(clock).atZone(zone).toLocalDate()
     val todayMl = DrinkRules.loggedForDay(records, today, zone)
+    val nextReminder = if (GulpReminderScheduler.notificationsAllowed(context)) {
+        ReminderRules.nextAlarm(clock, zone, preferences.reminders)
+    } else null
+    val nextReminderLabel = when {
+        !preferences.reminders.enabled -> "Off"
+        !GulpReminderScheduler.notificationsAllowed(context) -> "Notifications off"
+        nextReminder == null -> "Not scheduled"
+        else -> java.time.Instant.ofEpochMilli(nextReminder).atZone(zone)
+            .format(java.time.format.DateTimeFormatter.ofPattern("EEE, HH:mm"))
+    }
     var notificationPermission by remember { mutableStateOf(GulpReminderScheduler.notificationsAllowed(context)) }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         notificationPermission = granted
@@ -168,13 +181,19 @@ fun GulpApp(active: Boolean = true) {
             WaterBackdrop(scene)
             OnboardingScreen(onComplete = { plan, reference, medical ->
                 scope.launch { preferencesStore.finishOnboarding(plan, reference, medical) }
-                if (plan.enabled && !notificationPermission) requestPermission()
+                if (plan.enabled && !medical && !notificationPermission) requestPermission()
             })
         }
         return
     }
 
-    LaunchedEffect(Unit) { while (true) { delay(30_000); clock = System.currentTimeMillis() } }
+    // Pause the wall-clock updater in the background; refresh immediately on resume.
+    LaunchedEffect(active) {
+        if (active) {
+            clock = System.currentTimeMillis()
+            while (true) { delay(30_000); clock = System.currentTimeMillis() }
+        }
+    }
     LaunchedEffect(todayMl, preferences.visualCapacityMl) {
         scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
     }
@@ -201,6 +220,9 @@ fun GulpApp(active: Boolean = true) {
                 label = "tab crossfade") { destination ->
                 when (destination) {
                     GulpTab.HOME -> HomeScreen(scene = scene, viewport = viewport, todayMl = todayMl,
+                        nextReminderLabel = nextReminderLabel,
+                        editRequest = homeEditRequest,
+                        onEditRequestHandled = { homeEditRequest = 0 },
                         tiles = preferences.tiles,
                         onAddDrink = {
                             recordToEdit = null; initialKind = DrinkKind.WATER; initialAmount = 250
@@ -221,7 +243,7 @@ fun GulpApp(active: Boolean = true) {
                     GulpTab.REMINDERS -> RemindersScreen(scene, viewport, preferences, notificationPermission, clock,
                         onPlanChange = { plan ->
                             scope.launch { preferencesStore.setReminders(plan) }
-                            if (plan.enabled && !notificationPermission) requestPermission()
+                            if (plan.enabled && !medical && !notificationPermission) requestPermission()
                         }, requestNotificationPermission = requestPermission)
                     GulpTab.HISTORY -> HistoryScreen(scene, viewport, records, today,
                         onEdit = { entry -> recordToEdit = entry; showDrinkSheet = true })
@@ -233,7 +255,10 @@ fun GulpApp(active: Boolean = true) {
                         onTrackingChange = { amount, medical ->
                             scope.launch { preferencesStore.setTracking(amount, medical) }
                         },
-                        onCustomizeHome = { tabRoute = GulpTab.HOME.route },
+                        onCustomizeHome = {
+                            homeEditRequest += 1
+                            tabRoute = GulpTab.HOME.route
+                        },
                         onReminders = { tabRoute = GulpTab.REMINDERS.route },
                         onWaterLab = { showWaterLab = true },
                         onAppearanceChange = { reduced, tilt, ripples, contrast ->

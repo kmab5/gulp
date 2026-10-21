@@ -1,15 +1,7 @@
-# gulp — ongoing plan after Phase 5
+# After Phase 6 — device-verified corrections only
 
-## Phase 5 handed off (source implementation)
+The coding phases are consolidated in this repository. Phase 6 is a **source release candidate**, not a device-certified release. Next steps are to run the first Android SDK build, fix any reported errors, and visually review on a real phone. See `PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md`.
 
-Phases 1–5 remain in the full repository archive. Phase 5 adds launcher widgets, Settings appearance/accessibility preferences, personal-data export and irreversible confirmed deletion. See README and PHASE5_ARCHITECTURE.md for integration and testing.
+Do not claim a signed app, confirmed 60 FPS, verified notification reliability or a Play Store release until actually measured/tested. Keep delivering the full repo when making corrections.
 
-## Phase 6 — quality and release
-
-1. Ensure the actual Android SDK build and CI tests pass; fix any Gradle, Compose, Glance or KSP errors.
-2. Run `docs/PHASE5_DEVICE_TEST.md` and earlier test checklists on real devices/launchers.
-3. Profile the full-screen water engine on mid-range Android hardware and improve animations/contrast where required.
-4. Validate battery usage, quiet-hour alarms, data flow, accessibility, widget/launcher lifecycle, and dark/light appearance.
-5. Reduce package size, run R8 checks, prepare signed Android release candidate.
-
-**Always deliver full updated repository ZIPs rather than patches. Widgets are part of the initial release.**
+The initial release includes two Android launcher widgets; verify both on the device before distribution.

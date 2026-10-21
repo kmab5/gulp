@@ -1,3 +1,12 @@
+# gulp changelog
+
+## 0.6.0-rc1 · 2026-10-21 — Phase 6 source hardening
+- Local-time aware DST reminder scheduling and additional JVM regressions.
+- Notification disable/clear safety, one-off customization navigation and true Home next reminder.
+- Clinician-managed fluid handling, safe date editor selection, widget host access.
+- Android CI expanded to debug/release build, lint, unit tests and artifact reports.
+- Detailed build and device acceptance checklist. **Native build not run in this environment.**
+
 # Change log
 
 ## 0.5.0-phase5 · 2026-10-20

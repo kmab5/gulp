@@ -6,10 +6,21 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import org.junit.Rule
+import org.junit.Before
+import androidx.test.platform.app.InstrumentationRegistry
+import app.gulp.android.core.data.GulpPreferencesStore
+import app.gulp.android.core.domain.ReminderPlan
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class GulpNavigationTest {
     @get:Rule val rule = createAndroidComposeRule<MainActivity>()
+
+    @Before fun prepareCompletedOnboarding() = runBlocking {
+        // Activity launches before @Before; the DataStore flow updates the UI automatically.
+        GulpPreferencesStore(InstrumentationRegistry.getInstrumentation().targetContext)
+            .finishOnboarding(ReminderPlan(), 0, false)
+    }
 
     @Test fun allFiveDestinationsAreReachable() {
         listOf("Home", "Reminders", "History", "Review", "Settings").forEach { label ->

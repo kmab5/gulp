@@ -1,39 +1,46 @@
-# gulp — complete Android repository through Phase 5
+# gulp — native Android hydration app
 
-**Version 0.5.0-phase5 · Kotlin / Jetpack Compose · Android 9+ · offline-first**
+**Version 0.6.0-rc1 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**
 
-This is the **entire project** (Phases 1–5), not a patch. It includes the approved liquid UI system, Room drink history, customizable Home, onboarding, reminders, Review, Settings, and two Android launcher widgets. No remote server or account is required. **This source is not yet Android-build verified; no APK is included.**
+This is the **complete development repository** through all six planned coding phases, including the design reference screenshots, scientific guardrails, native animated water UI, customizable quick-add Home, Room-powered drink history, onboarding, notifications and quiet hours, Review analytics, Settings, CSV export/deletion and two Glance launcher widgets.
 
-## Phase 5 — new features
+## First compilation — Android Studio
 
-- Two launcher widgets built with **Jetpack Glance 1.2.0 stable**: a compact quick-log widget (`+250 mL`) and a larger Today widget (`+250 mL`/`+500 mL`). Both show the day's *recorded* drinks and use the same Room repository as Home.
-- Widget appearance follows gulp's colors using lightweight static native views rather than keeping the live water physics running on the launcher.
-- All add/edit/delete/undo actions request widget refresh; date, timezone, reboot and package-replacement broadcasts refresh the "Today" boundary. Glance updates may be delayed by launcher/device policy.
-- Settings now saves **Reduce animation**, **Tilt response**, **Touch ripples**, and **Stronger text contrast** in DataStore. System animation settings still take precedence where relevant.
-- **Export drinks as CSV** uses the Android system file picker (`ACTION_CREATE_DOCUMENT`). The CSV contains a UTC ISO timestamp, saved drink type and quantity for every recorded drink; its data stays in the user-selected destination.
-- **Delete all drinks** requires a separate confirmation and removes drink records from Room. It preserves configuration and reminder choices. Deletion cannot be undone.
-- Added widget update, CSV structure, repository deleteAll and manifest tests. All previous phase features are retained.
+1. Extract the archive and open the enclosed **`gulp/`** folder (the one containing `settings.gradle.kts`).
+2. Install **JDK 17, Android SDK Platform 36, SDK Build Tools 35.0.0**. AGP **8.13.2** and Kotlin **2.2.21** are pinned in the version catalog; Gradle **8.13** is required.
+3. Let Android Studio sync Gradle. In **Run Configurations**, run **app** on Android 9+.
+4. Test add/edit, reminders, Review and launcher widgets; the special water preview is in **Settings → Water animation preview**.
+5. Follow [`docs/PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md`](docs/PHASE6_BUILD_AND_DEVICE_ACCEPTANCE.md). Share the first Gradle error/stack trace if any; Android compilation was **not possible** in the authoring container.
 
-## Open in Android Studio
-
-1. Extract this ZIP and open the enclosed **`gulp/`** directory as a project.
-2. Use JDK **17**, Android SDK **API 36** and **Gradle 8.13** (the repository contains the Gradle wrapper scripts and properties, but the bootstrap JAR is **not bundled**; use an installed Gradle 8.13 or generate the official Gradle wrapper in a connected environment).
-3. Sync project and run `app` on Android 9+.
-4. On the device, long-press Android's home screen, select **Widgets**, choose **gulp · Quick add** or **gulp · Today** and add it.
-5. Change Settings → Appearance and accessibility; use export/delete in Settings → Data and privacy.
-6. See `docs/PHASE5_DEVICE_TEST.md` and previous phase device checklists before approving an APK.
-
-### Build, tests, release
+### Build from terminal
 
 ```bash
+# If Gradle 8.13 is installed:
 gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-# With an emulator or physical device:
+# If you have an emulator/phone attached:
 gradle :app:connectedDebugAndroidTest
+# Release artifacts (unsigned until you configure signing):
+gradle :app:assembleRelease :app:bundleRelease
+python3 tools/report_package_size.py
 ```
 
-`.github/workflows/android-ci.yml` downloads SDK 36 and runs tests, lint and debug APK compilation; it uploads `gulp-phase5-debug` upon success. This CI job **has not been run by the authoring environment**.
+The cross-platform `gradlew` / `gradlew.bat` scripts bootstrap the **official Gradle 8.13 wrapper JAR** from `gradle/gradle` on GitHub on first use, verifying its Git blob ID, then download the official Gradle distribution. The wrapper JAR is **not in the ZIP** because it couldn't be fetched from this restricted container. An installed Gradle 8.13 or Android Studio sync is another option. First sync requires network access.
 
-### Offline checks performed here
+## Phase 6 code-hardening work
+
+- Local-clock reminder calculation now holds 08:00 at 08:00 across DST (no hour drift); new DST regression tests.
+- Disabling reminders clears previously posted notifications; scheduling the next alarm no longer clears a freshly delivered notification. Old notification log/snooze actions are rejected if reminders have been disabled.
+- Users with medically managed fluids are not given automatic generic reminders or tracking goals, including when Settings changes later.
+- Home shows the actual upcoming reminder (or Off / Notifications off), instead of a permanent "Not set" placeholder.
+- Settings > Customize shortcuts enters edit mode immediately, and the request is consumed once; no accidental re-entry on subsequent Home visits.
+- Drink date editor now handles month/year changes safely (previous month-end selection could crash).
+- Launcher widget receivers are accessible to the Android host; widget actions still use the same Room writer.
+- Removed an obsolete Compose pointer-input import, updated Gradle artifacts to `0.6.0-rc1`, expanded CI to test/lint/build debug plus unsigned release outputs, and added package-size reporting.
+- Full earlier phase source and reference design assets are preserved. No internet permission or cloud tracking is added.
+
+## Offline verification
+
+Run all source-level checks from the repo root:
 
 ```bash
 bash tools/verify_core.sh
@@ -42,28 +49,22 @@ bash tools/verify_phase3.sh
 bash tools/verify_repository_offline.sh
 bash tools/verify_phase4.sh
 bash tools/verify_phase5.sh
+bash tools/verify_phase6.sh
 python3 tools/verify_structure.py
 python3 tools/verify_phase4_structure.py
+python3 tools/verify_phase5_structure.py
 ```
 
-These tests exercise pure Kotlin water/domain code and compile repository logic against *Room substitutes*. The Android widget screens, DataStore wiring, notifications, Compose UI and KSP-generated Room implementation still require native Android/CI verification.
+These checks compile and run the **actual Kotlin domain/geometry code** and exercise repository behavior against lightweight Room substitutes. They **do not** compile Android Compose/Glance or validate Gradle/KSP generation. No APK has been produced here; the app's visual motion and performance must be tested on hardware.
 
-## Project directories
+## Project layout
 
-- `app/src/main/java/app/gulp/android/widget/`: Glance widgets, callback, date refresh receiver.
-- `core/data/`: persistent Room records, DataStore config, writes/undo/export/delete and widget refresh coordination.
-- `core/domain/`: drinking rules, reminders, Review analytics, CSV encoding.
-- `core/graphics/`: water simulation, touch/sensor effects, waterline-aware contrast.
+- `app/src/main/java/app/gulp/android/core/graphics/`: procedural water, touch ripples, sensors, shared waterline masking.
+- `core/data/` and `core/domain/`: Room, DataStore, drinks, undo, reminders, reporting and CSV.
+- `core/reminders/`: inexact alarms, notification actions, restart/timezone handling.
 - `feature/`: Home, History, Reminders, Review, Settings, onboarding.
-- `app/src/main/res/xml/`: launcher widget declarations.
-- `tools/`: offline verification scripts; `docs/`: design contract, safety science and device acceptance plans.
+- `widget/` and `app/src/main/res/xml/`: two native Android home-screen widgets.
+- `docs/reference/`: approved visual references; `docs/SCIENCE_RULES.md`: research guardrails.
+- `tools/`: offline checks and artifact-size reporting; `.github/workflows/`: Android compile and lint CI.
 
-## Phase 6 / outstanding quality gates
-
-1. Compile and fix **all** Android/Glance/KSP/Compose errors in Android Studio or CI.
-2. Run instrumented database and UI tests, test both widgets on multiple launchers, including rapid taps and date changes.
-3. Check native performance, sensor behavior, frame pacing and accessibility on physical phones.
-4. Tune APK/AAB footprint, performance and visuals based on measured results.
-5. Produce installable APK/AAB and release candidate. Play Store publishing requires signing/account access.
-
-**Do not claim the project is release-ready or clinically assessing hydration.** The display represents self-reported, recorded drinks, not actual body hydration.
+The water fill is an artistic representation of **recorded fluid volume**, not a medical hydration measurement or prescription. References and gentle reminders are optional. No arbitrary "catch-up drinking" rule exists.

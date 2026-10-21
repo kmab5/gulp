@@ -41,14 +41,22 @@ object GulpReminderScheduler {
         context, 761, tickIntent(context), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
-    fun cancel(context: Context) {
+    private fun cancelAlarm(context: Context) {
         val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarms.cancel(pendingTick(context))
     }
 
+    fun cancel(context: Context) {
+        cancelAlarm(context)
+        clearNotification(context)
+    }
+
     fun schedule(context: Context, plan: ReminderPlan, now: Long = System.currentTimeMillis()) {
-        cancel(context)
-        if (!notificationsAllowed(context)) return
+        cancelAlarm(context)
+        if (!plan.enabled || !notificationsAllowed(context)) {
+            clearNotification(context)
+            return
+        }
         val next = ReminderRules.nextAlarm(now, ZoneId.systemDefault(), plan) ?: return
         val operation = PendingIntent.getBroadcast(
             context, 761, tickIntent(context).putExtra(EXTRA_DUE, next),
@@ -121,6 +129,10 @@ class GulpReminderReceiver : BroadcastReceiver() {
                         }
                     }
                     GulpReminderScheduler.ACTION_LOG -> {
+                        if (!current.enabled) {
+                            GulpReminderScheduler.clearNotification(app)
+                            return@launch
+                        }
                         if (!prefs.consumeNotificationAction(intent.getLongExtra(GulpReminderScheduler.EXTRA_ACTION_TOKEN, 0L))) return@launch
                         // A button press records a drink; receiving an ordinary reminder never does.
                         repo.add(DrinkKind.WATER, 250, now)
@@ -128,6 +140,10 @@ class GulpReminderReceiver : BroadcastReceiver() {
                         prefs.snoozeUntil(0L)
                     }
                     GulpReminderScheduler.ACTION_SNOOZE -> {
+                        if (!current.enabled) {
+                            GulpReminderScheduler.clearNotification(app)
+                            return@launch
+                        }
                         if (!prefs.consumeNotificationAction(intent.getLongExtra(GulpReminderScheduler.EXTRA_ACTION_TOKEN, 0L))) return@launch
                         GulpReminderScheduler.clearNotification(app)
                         prefs.snoozeUntil(now + 15 * 60_000L)

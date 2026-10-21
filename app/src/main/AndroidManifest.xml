@@ -28,7 +28,7 @@
         </receiver>
         <!-- Native launcher widgets. Glance produces static RemoteViews; no live sensors. -->
         <receiver android:name=".widget.GulpQuickWidgetReceiver"
-            android:label="gulp · Quick add" android:exported="false">
+            android:label="gulp · Quick add" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -36,7 +36,7 @@
                 android:resource="@xml/gulp_quick_widget_info" />
         </receiver>
         <receiver android:name=".widget.GulpSummaryWidgetReceiver"
-            android:label="gulp · Today" android:exported="false">
+            android:label="gulp · Today" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

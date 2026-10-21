@@ -56,8 +56,14 @@ fun RemindersScreen(
                 Note("Times are approximate. Android may delay notifications to save battery.")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Reminders on", color = GulpPalette.White)
-                    Switch(plan.enabled, onCheckedChange = { onPlanChange(plan.copy(enabled = it, snoozeUntilMillis = 0)) })
+                    Switch(plan.enabled, enabled = !preferences.clinicianManagedFluids,
+                        onCheckedChange = { onPlanChange(plan.copy(enabled = it, snoozeUntilMillis = 0)) })
                 }
+            }
+        }
+        if (preferences.clinicianManagedFluids) {
+            FrostPanel(Modifier.fillMaxWidth()) {
+                Note("Reminders are paused for medically managed fluid plans. Follow your clinician's instructions; you can still log drinks manually.")
             }
         }
         if (plan.enabled && !notificationPermission) {

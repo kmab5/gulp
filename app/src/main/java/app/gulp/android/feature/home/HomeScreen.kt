@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.consume
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -65,6 +64,9 @@ fun HomeScreen(
     scene: WaterScene,
     viewport: IntSize,
     todayMl: Int,
+    nextReminderLabel: String,
+    editRequest: Int,
+    onEditRequestHandled: () -> Unit,
     tiles: List<HomeTile>,
     onAddDrink: () -> Unit,
     onLogShortcut: (HomeTile) -> Unit,
@@ -76,6 +78,13 @@ fun HomeScreen(
     var isAddingTile by remember { mutableStateOf(false) }
     val bounds = remember { mutableStateMapOf<String, Rect>() }
     LaunchedEffect(tiles) { if (!editMode) draft = tiles }
+    LaunchedEffect(editRequest) {
+        if (editRequest > 0) {
+            draft = tiles
+            editMode = true
+            onEditRequestHandled()
+        }
+    }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 23.dp, vertical = 24.dp)) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -85,7 +94,7 @@ fun HomeScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     WaterAdaptiveText("NEXT REMINDER", scene, viewport,
                         fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp, fontSize = 10.sp)
-                    WaterAdaptiveText("Not set", scene, viewport, fontWeight = FontWeight.Bold, fontSize = 23.sp)
+                    WaterAdaptiveText(nextReminderLabel, scene, viewport, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 }
                 WaterAdaptiveText("gulp", scene, viewport, fontWeight = FontWeight.Bold, fontSize = 23.sp)
             }

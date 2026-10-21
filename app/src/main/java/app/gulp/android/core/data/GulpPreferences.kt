@@ -63,7 +63,10 @@ class GulpPreferencesStore(private val context: Context) {
             hasCompletedOnboarding = p[onboardKey] ?: false,
             trackingReferenceMl = TrackingReference.sanitized(p[referenceKey] ?: 0),
             clinicianManagedFluids = p[medicalKey] ?: false,
-            reminders = if (plan.valid()) plan else ReminderPlan(),
+            reminders = if (plan.valid()) {
+                if (p[medicalKey] == true) plan.copy(enabled = false, snoozeUntilMillis = 0L)
+                else plan
+            } else ReminderPlan(),
             reduceMotion = p[reduceMotionKey] ?: false,
             tiltEnabled = p[tiltKey] ?: true,
             touchRipplesEnabled = p[ripplesKey] ?: true,
@@ -89,7 +92,7 @@ class GulpPreferencesStore(private val context: Context) {
         require(plan.valid())
         context.gulpDataStore.edit { p ->
             p[onboardKey] = true
-            p[reminderEnabled] = plan.enabled
+            p[reminderEnabled] = plan.enabled && !clinicianManaged
             p[intervalKey] = plan.intervalMinutes
             p[wakeKey] = plan.awakeStartMinute
             p[quietKey] = plan.awakeEndMinute
@@ -102,7 +105,7 @@ class GulpPreferencesStore(private val context: Context) {
     suspend fun setReminders(plan: ReminderPlan) {
         require(plan.valid())
         context.gulpDataStore.edit { p ->
-            p[reminderEnabled] = plan.enabled
+            p[reminderEnabled] = plan.enabled && p[medicalKey] != true
             p[intervalKey] = plan.intervalMinutes
             p[wakeKey] = plan.awakeStartMinute
             p[quietKey] = plan.awakeEndMinute
@@ -145,6 +148,10 @@ class GulpPreferencesStore(private val context: Context) {
         context.gulpDataStore.edit { p ->
             p[medicalKey] = clinicianManaged
             p[referenceKey] = if (clinicianManaged) 0 else TrackingReference.sanitized(referenceMl)
+            if (clinicianManaged) {
+                p[reminderEnabled] = false
+                p[snoozeKey] = 0L
+            }
         }
     }
 }

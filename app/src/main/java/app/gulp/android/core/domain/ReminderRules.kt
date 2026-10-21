@@ -29,10 +29,14 @@ object ReminderRules {
         var best: Long? = null
         for (offset in -1L..2L) {
             val date: LocalDate = day.plusDays(offset)
-            val start = date.atStartOfDay(zone).plusMinutes(plan.awakeStartMinute.toLong())
+            // Construct each opportunity on the *local clock*. Adding elapsed minutes to
+            // midnight shifts 08:00 to 09:00 when the spring DST jump removes an hour.
+            // A gap resolves to the first valid time; an overlap uses the earlier offset.
             val count = (plan.awakeDurationMinutes - 1) / plan.intervalMinutes
             for (n in 0..count) {
-                val t = start.plusMinutes(n.toLong() * plan.intervalMinutes).toInstant().toEpochMilli()
+                val localMinute = plan.awakeStartMinute + n * plan.intervalMinutes
+                val localTime = date.atStartOfDay().plusMinutes(localMinute.toLong())
+                val t = localTime.atZone(zone).toInstant().toEpochMilli()
                 if (t > afterMillis && (best == null || t < best)) best = t
             }
         }

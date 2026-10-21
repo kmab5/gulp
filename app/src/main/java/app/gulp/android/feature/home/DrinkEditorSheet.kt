@@ -79,7 +79,7 @@ fun DrinkEditorSheet(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(onClick = {
                     DatePickerDialog(context, { _, year, month, day ->
-                        localTime = localTime.withYear(year).withMonth(month + 1).withDayOfMonth(day)
+                        localTime = java.time.LocalDate.of(year, month + 1, day).atTime(localTime.toLocalTime())
                     }, localTime.year, localTime.monthValue - 1, localTime.dayOfMonth).show()
                 }) { Text(localTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))) }
                 TextButton(onClick = {
