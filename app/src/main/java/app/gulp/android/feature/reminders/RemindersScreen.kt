@@ -1,50 +1,112 @@
 package app.gulp.android.feature.reminders
 
+import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.IntSize
-import app.gulp.android.core.graphics.WaterScene
-import app.gulp.android.core.graphics.WaterAdaptiveText
+import app.gulp.android.core.data.GulpPreferences
 import app.gulp.android.core.design.FrostPanel
 import app.gulp.android.core.design.GulpPalette
 import app.gulp.android.core.design.Note
-import app.gulp.android.core.design.PreferenceRow
-import app.gulp.android.core.design.SectionHeader
+import app.gulp.android.core.domain.ReminderPlan
+import app.gulp.android.core.domain.ReminderRules
+import app.gulp.android.core.graphics.WaterAdaptiveText
+import app.gulp.android.core.graphics.WaterScene
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun RemindersScreen(scene: WaterScene, viewport: IntSize, onPreviewAction: () -> Unit) {
+fun RemindersScreen(
+    scene: WaterScene, viewport: IntSize, preferences: GulpPreferences,
+    notificationPermission: Boolean, nowMillis: Long,
+    onPlanChange: (ReminderPlan) -> Unit,
+    requestNotificationPermission: () -> Unit
+) {
+    val context = LocalContext.current
+    val plan = preferences.reminders
+    val next = ReminderRules.nextAlarm(nowMillis, ZoneId.systemDefault(), plan)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        verticalArrangement = Arrangement.spacedBy(17.dp)) {
         WaterAdaptiveText("Reminders", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 22.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("NEXT REMINDER", fontSize = 11.sp, letterSpacing = 1.sp, color = GulpPalette.SoftWhite)
-                Text("Not set", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = GulpPalette.White)
-                Note("Choose your schedule once reminder setup is available.")
+                Text("Next reminder", fontSize = 14.sp, color = GulpPalette.SoftWhite)
+                Text(if (next == null) "Paused" else Instant.ofEpochMilli(next)
+                    .atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE, HH:mm")),
+                    color = GulpPalette.Glacier, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Note("Times are approximate. Android may delay notifications to save battery.")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Reminders on", color = GulpPalette.White)
+                    Switch(plan.enabled, onCheckedChange = { onPlanChange(plan.copy(enabled = it, snoozeUntilMillis = 0)) })
+                }
             }
         }
-        Spacer(Modifier.height(1.dp))
-        WaterAdaptiveText("Your day", scene, viewport, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        FrostPanel(Modifier.fillMaxWidth(), padding = 16.dp) {
-            Column {
-                PreferenceRow("Reminder interval", "Choose how often to receive a prompt", onPreviewAction)
-                PreferenceRow("Quiet hours", "No alerts while you're sleeping", onPreviewAction)
-                PreferenceRow("Pause reminders", null, onPreviewAction)
+        if (plan.enabled && !notificationPermission) {
+            FrostPanel(Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Notifications are off", color = GulpPalette.White, fontWeight = FontWeight.Bold)
+                    Note("Turn on Android notifications to receive reminders.")
+                    Button(onClick = requestNotificationPermission,
+                        colors = ButtonDefaults.buttonColors(containerColor = GulpPalette.Glacier,
+                            contentColor = GulpPalette.Ink)) { Text("Allow notifications") }
+                }
             }
         }
-        WaterAdaptiveText("Intervals are reminders, not required drinking times.", scene, viewport, fontSize = 12.sp)
+        FrostPanel(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Every", fontSize = 17.sp, color = GulpPalette.White, fontWeight = FontWeight.Bold)
+                listOf(60,90,120,180,240).chunked(3).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        row.forEach { amount ->
+                            FilterChip(selected = plan.intervalMinutes == amount, onClick = {
+                                onPlanChange(plan.copy(intervalMinutes = amount, snoozeUntilMillis = 0))
+                            }, label = { Text(if (amount < 120) "$amount min" else "${amount / 60} hr") })
+                        }
+                    }
+                }
+                Note("Choose what feels comfortable. There's no proven optimal drinking interval.")
+            }
+        }
+        FrostPanel(Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Quiet hours", color = GulpPalette.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Note("You won't get drink notifications outside these hours.")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    TextButton(onClick = {
+                        TimePickerDialog(context, { _, h, m ->
+                            val changed = plan.copy(awakeStartMinute = h * 60 + m, snoozeUntilMillis = 0)
+                            if (changed.valid()) onPlanChange(changed)
+                        }, plan.awakeStartMinute / 60, plan.awakeStartMinute % 60, true).show()
+                    }) { Text("From ${ReminderRules.formatMinute(plan.awakeStartMinute)}") }
+                    TextButton(onClick = {
+                        TimePickerDialog(context, { _, h, m ->
+                            val changed = plan.copy(awakeEndMinute = h * 60 + m, snoozeUntilMillis = 0)
+                            if (changed.valid()) onPlanChange(changed)
+                        }, plan.awakeEndMinute / 60, plan.awakeEndMinute % 60, true).show()
+                    }) { Text("Until ${ReminderRules.formatMinute(plan.awakeEndMinute)}") }
+                }
+                Note("Choose a wake and sleep time at least one hour apart.")
+            }
+        }
+        WaterAdaptiveText("A reminder is an invitation, not an order to drink.", scene, viewport, fontSize = 12.sp)
     }
 }

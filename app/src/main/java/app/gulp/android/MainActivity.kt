@@ -1,8 +1,12 @@
 package app.gulp.android
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -10,6 +14,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,13 +55,16 @@ import app.gulp.android.core.design.GulpPalette
 import app.gulp.android.core.domain.DrinkKind
 import app.gulp.android.core.domain.DrinkRecord
 import app.gulp.android.core.domain.DrinkRules
+import app.gulp.android.core.domain.ReminderPlan
 import app.gulp.android.core.graphics.WaterBackdrop
 import app.gulp.android.core.graphics.WaterTiltSensor
 import app.gulp.android.core.graphics.rememberWaterScene
 import app.gulp.android.core.graphics.waterTouchFeedback
+import app.gulp.android.core.reminders.GulpReminderScheduler
 import app.gulp.android.core.navigation.GulpNav
 import app.gulp.android.core.navigation.GulpTab
 import app.gulp.android.feature.history.HistoryScreen
+import app.gulp.android.feature.onboarding.OnboardingScreen
 import app.gulp.android.feature.home.DrinkEditorSheet
 import app.gulp.android.feature.home.HomeScreen
 import app.gulp.android.feature.reminders.RemindersScreen
@@ -92,7 +101,14 @@ fun GulpApp(active: Boolean = true) {
     val repository = remember(context) { GulpRepository.create(context) }
     val preferencesStore = remember(context) { GulpPreferencesStore(context) }
     val records by repository.records.collectAsState(initial = emptyList())
-    val preferences by preferencesStore.settings.collectAsState(initial = GulpPreferences())
+    val loadedPreferences by produceState<GulpPreferences?>(initialValue = null, preferencesStore) {
+        preferencesStore.settings.collect { value = it }
+    }
+    if (loadedPreferences == null) {
+        Box(Modifier.fillMaxSize().background(GulpPalette.DeepBlue))
+        return
+    }
+    val preferences = loadedPreferences ?: return
     val scope = rememberCoroutineScope()
     val snackbars = remember { SnackbarHostState() }
     val scene = rememberWaterScene(active)
@@ -108,9 +124,35 @@ fun GulpApp(active: Boolean = true) {
     var initialKind by remember { mutableStateOf(DrinkKind.WATER) }
     var initialAmount by remember { mutableStateOf(250) }
     var clock by remember { mutableStateOf(System.currentTimeMillis()) }
-    val zone = remember { ZoneId.systemDefault() }
+    val zone = ZoneId.systemDefault()
     val today = Instant.ofEpochMilli(clock).atZone(zone).toLocalDate()
     val todayMl = DrinkRules.loggedForDay(records, today, zone)
+    var notificationPermission by remember { mutableStateOf(GulpReminderScheduler.notificationsAllowed(context)) }
+    val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        notificationPermission = granted
+    }
+    val requestPermission = {
+        if (Build.VERSION.SDK_INT >= 33) {
+            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else notificationPermission = true
+    }
+
+    LaunchedEffect(preferences.reminders, notificationPermission) {
+        GulpReminderScheduler.createChannel(context)
+        if (notificationPermission) GulpReminderScheduler.schedule(context, preferences.reminders)
+        else GulpReminderScheduler.cancel(context)
+    }
+    LaunchedEffect(active) { notificationPermission = GulpReminderScheduler.notificationsAllowed(context) }
+    if (!preferences.hasCompletedOnboarding) {
+        Box(Modifier.fillMaxSize()) {
+            WaterBackdrop(scene)
+            OnboardingScreen(onComplete = { plan, reference, medical ->
+                scope.launch { preferencesStore.finishOnboarding(plan, reference, medical) }
+                if (plan.enabled && !notificationPermission) requestPermission()
+            })
+        }
+        return
+    }
 
     LaunchedEffect(Unit) { while (true) { delay(30_000); clock = System.currentTimeMillis() } }
     LaunchedEffect(todayMl, preferences.visualCapacityMl) {
@@ -142,6 +184,7 @@ fun GulpApp(active: Boolean = true) {
                         onLogShortcut = { tile ->
                             scope.launch {
                                 val ticket = repository.add(tile.kind, tile.amountMl)
+                                preferencesStore.snoozeUntil(0L)
                                 scene.disturb(.5f, .56f, 1.25f)
                                 snackbars.currentSnackbarData?.dismiss()
                                 val result = snackbars.showSnackbar(ticket.message, "Undo", withDismissAction = true,
@@ -150,19 +193,25 @@ fun GulpApp(active: Boolean = true) {
                             }
                         },
                         onSaveTiles = { layout -> scope.launch { preferencesStore.saveTiles(layout) } })
-                    GulpTab.REMINDERS -> RemindersScreen(scene, viewport,
-                        onPreviewAction = { notice = "Reminder scheduling is coming in Phase 4." })
+                    GulpTab.REMINDERS -> RemindersScreen(scene, viewport, preferences, notificationPermission, clock,
+                        onPlanChange = { plan ->
+                            scope.launch { preferencesStore.setReminders(plan) }
+                            if (plan.enabled && !notificationPermission) requestPermission()
+                        }, requestNotificationPermission = requestPermission)
                     GulpTab.HISTORY -> HistoryScreen(scene, viewport, records, today,
                         onEdit = { entry -> recordToEdit = entry; showDrinkSheet = true })
-                    GulpTab.REVIEW -> ReviewScreen(scene, viewport)
-                    GulpTab.SETTINGS -> SettingsScreen(scene, viewport,
-                        visualCapacityMl = preferences.visualCapacityMl,
+                    GulpTab.REVIEW -> ReviewScreen(scene, viewport, records, today, preferences.trackingReferenceMl)
+                    GulpTab.SETTINGS -> SettingsScreen(scene, viewport, preferences,
                         onVisualCapacityChange = { amount ->
                             scope.launch { preferencesStore.changeVisualCapacity(amount) }
                         },
+                        onTrackingChange = { amount, medical ->
+                            scope.launch { preferencesStore.setTracking(amount, medical) }
+                        },
                         onCustomizeHome = { tabRoute = GulpTab.HOME.route },
+                        onReminders = { tabRoute = GulpTab.REMINDERS.route },
                         onWaterLab = { showWaterLab = true },
-                        onPreviewAction = { notice = "This setting is scheduled for a later phase." })
+                        onPreviewAction = { notice = "This setting is scheduled for Phase 5." })
                 }
             }
         }
@@ -180,8 +229,9 @@ fun GulpApp(active: Boolean = true) {
             onSave = { kind, ml, timestamp ->
                 showDrinkSheet = false; recordToEdit = null
                 scope.launch {
-                    val ticket = if (original == null) repository.add(kind, ml, timestamp)
-                        else repository.edit(original.id, kind, ml, timestamp)
+                    val ticket = if (original == null) {
+                        repository.add(kind, ml, timestamp).also { preferencesStore.snoozeUntil(0L) }
+                    } else repository.edit(original.id, kind, ml, timestamp)
                     if (ticket != null) {
                         scene.disturb(.5f, .56f, 1.1f)
                         snackbars.currentSnackbarData?.dismiss()

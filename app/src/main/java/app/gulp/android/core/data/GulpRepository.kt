@@ -7,6 +7,7 @@ import app.gulp.android.core.domain.DrinkRecord
 import app.gulp.android.core.domain.DrinkRules
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -24,6 +25,9 @@ class GulpRepository(private val dao: DrinkDao) {
     private var outstanding: UndoTicket? = null
 
     val records: Flow<List<DrinkRecord>> = dao.observeAll().map { list -> list.map { it.asRecord() } }
+
+    /** Latest recorded entry, used only to suppress a redundant notification after a drink. */
+    suspend fun latestTimeMillis(): Long? = records.first().asSequence().filter { it.timeMillis <= System.currentTimeMillis() }.maxOfOrNull { it.timeMillis }
 
     suspend fun add(kind: DrinkKind, ml: Int, atMillis: Long = System.currentTimeMillis()): UndoTicket = writeMutex.withLock {
         DrinkRules.checkAmount(ml)

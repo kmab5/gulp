@@ -38,3 +38,11 @@ gradle :app:connectedDebugAndroidTest
 ```
 
 Reminder: inherited Phase 2 archive lacked `gradle/wrapper/gradle-wrapper.jar`; use system Gradle 8.13 or generate the wrapper on a networked development machine.
+
+
+## Phase 4 — October 20, 2026
+- [x] Reminder/date/overnight/DST/review/reference pure Kotlin assertions passed; see `tools/verify_phase4.sh`.
+- [x] Previous offline checks retained (core, fluid geometry, Phase 3 rules and Room API substitute).
+- [x] Manifest/Gradle/Kotlin source/static structure verified.
+- [ ] Android SDK build, notification integration, Room/KSP, Compose tests and OEM background delivery not verified in this environment.
+- [ ] Device acceptance checks listed in `docs/PHASE4_DEVICE_TEST.md`.
