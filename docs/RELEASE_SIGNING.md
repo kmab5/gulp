@@ -28,6 +28,7 @@ Both `build-key` and `keystore.properties` are ignored by Git. The properties fi
 
 ```powershell
 ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug -Dorg.gradle.java.home="D:/Code/java/jdk-21.0.12.1"
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease -Dorg.gradle.java.home="D:/Code/java/jdk-21.0.12.1"
 ./gradlew :app:assembleRelease :app:bundleRelease -Dorg.gradle.java.home="D:/Code/java/jdk-21.0.12.1"
 ```
 
