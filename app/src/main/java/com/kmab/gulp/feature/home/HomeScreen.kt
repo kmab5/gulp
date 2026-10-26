@@ -1,6 +1,10 @@
 package com.kmab.gulp.feature.home
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -9,6 +13,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -70,6 +77,7 @@ import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.domain.HomeTile
 import com.kmab.gulp.core.domain.HomeTileRules
 import com.kmab.gulp.core.graphics.WaterAdaptiveText
+import com.kmab.gulp.core.graphics.WaterAdaptiveSubmark
 import com.kmab.gulp.core.graphics.WaterScene
 import java.util.UUID
 import kotlin.math.roundToInt
@@ -80,6 +88,7 @@ fun HomeScreen(
     scene: WaterScene, viewport: IntSize, todayMl: Int,
     nextReminderLabel: String, editRequest: Int, onEditRequestHandled: () -> Unit,
     tiles: List<HomeTile>, onAddDrink: () -> Unit,
+    showBrandSubmark: Boolean, onToggleBrand: () -> Unit,
     onLogShortcut: (HomeTile) -> Unit, onSaveTiles: (List<HomeTile>) -> Unit
 ) {
     var editing by remember { mutableStateOf(false) }
@@ -111,7 +120,25 @@ fun HomeScreen(
                 WaterAdaptiveText(nextReminderLabel, scene, viewport,
                     fontWeight = FontWeight.Bold, fontSize = 19.sp)
             }
-            WaterAdaptiveText("gulp", scene, viewport, fontWeight = FontWeight.ExtraBold, fontSize = 25.sp)
+            // Stable hit area; both representations follow the moving waterline.
+            Box(Modifier.width(92.dp).height(48.dp)
+                .semantics { stateDescription = if (showBrandSubmark) "Symbol" else "Wordmark" }
+                .clickable(role = Role.Button, onClickLabel = "Switch gulp logo", onClick = onToggleBrand),
+                contentAlignment = Alignment.CenterEnd) {
+                AnimatedContent(targetState = showBrandSubmark,
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd,
+                    transitionSpec = {
+                        (fadeIn(tween(235)) + scaleIn(initialScale = .88f, animationSpec = tween(260))) togetherWith
+                            (fadeOut(tween(165)) + scaleOut(targetScale = 1.07f, animationSpec = tween(205)))
+                    }, label = "gulp wordmark/submark") { symbol ->
+                    if (symbol) {
+                        WaterAdaptiveSubmark(scene, viewport, Modifier.size(40.dp))
+                    } else {
+                        WaterAdaptiveText("gulp", scene, viewport,
+                            fontWeight = FontWeight.ExtraBold, fontSize = 25.sp)
+                    }
+                }
+            }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())

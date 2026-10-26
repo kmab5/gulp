@@ -33,6 +33,7 @@ jobs:
           python3 tools/verify_phase4_structure.py
           python3 tools/verify_phase5_structure.py
           python3 tools/verify_release_identity.py
+          python3 tools/verify_brand_identity.py
           python3 tools/verify_ui_refresh.py
           python3 tools/verify_ui_review_02.py
       - name: Compile, test, lint and package

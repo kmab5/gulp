@@ -91,3 +91,8 @@ These checks compile and run the **actual Kotlin domain/geometry code** and exer
 - `tools/`: offline checks and artifact-size reporting; `.github/workflows/`: Android compile and lint CI.
 
 The water fill is an artistic representation of **recorded fluid volume**, not a medical hydration measurement or prescription. References and gentle reminders are optional. No arbitrary "catch-up drinking" rule exists.
+
+
+## Fluid Nucleus identity
+
+Official approved identity: Fluid Nucleus / Option A. The Home header tap toggles the wordmark and water-adaptive monochrome submark. Source vectors: `design/brand/`, `docs/BRAND_FLUID_NUCLEUS.md`. Launcher background is pale to preserve foreground contrast.

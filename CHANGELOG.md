@@ -1,3 +1,8 @@
+## Branding update — Fluid Nucleus
+- Updated launcher with three-layer organic mark and true monochrome themed icon.
+- Home header toggles gulp text / mono submark and preserves waterline adaptive contrast.
+- Added brand SVG sources, export kit, identity documentation and static checks.
+
 ## 0.6.4-rc5 — UI feedback audit and follow-up (2026-10-21)
 
 - Applied waterline-adaptive ink to exposed onboarding headings and step label (the frosted card text remains fixed high-contrast).

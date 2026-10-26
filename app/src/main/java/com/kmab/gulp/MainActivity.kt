@@ -136,6 +136,7 @@ fun GulpApp(active: Boolean = true) {
     val scene = rememberWaterScene(active)
     var viewport by remember { mutableStateOf(IntSize.Zero) }
     var tabRoute by rememberSaveable { mutableStateOf(GulpTab.HOME.route) }
+    var showHomeBrandSubmark by rememberSaveable { mutableStateOf(false) }
     var homeEditRequest by remember { mutableIntStateOf(0) }
     val tab = GulpTab.fromRoute(tabRoute)
     var showWaterLab by rememberSaveable { mutableStateOf(false) }
@@ -238,6 +239,11 @@ fun GulpApp(active: Boolean = true) {
                         editRequest = homeEditRequest,
                         onEditRequestHandled = { homeEditRequest = 0 },
                         tiles = preferences.tiles,
+                        showBrandSubmark = showHomeBrandSubmark,
+                        onToggleBrand = {
+                            showHomeBrandSubmark = !showHomeBrandSubmark
+                            scene.disturb(.85f, .10f, .20f)
+                        },
                         onAddDrink = {
                             recordToEdit = null; initialKind = DrinkKind.WATER; initialAmount = 250
                             showDrinkSheet = true
