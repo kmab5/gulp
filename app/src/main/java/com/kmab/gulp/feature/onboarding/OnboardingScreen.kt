@@ -4,6 +4,7 @@ import android.app.TimePickerDialog
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -30,10 +31,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import com.kmab.gulp.core.design.GlassScrollableColumn
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
+import com.kmab.gulp.core.graphics.WaterAdaptiveSubmark
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -92,26 +100,47 @@ fun OnboardingScreen(scene: WaterScene, viewport: IntSize, onComplete: (Reminder
             Box(Modifier.size(49.dp)
                 .background(Color(0xFF19445D).copy(alpha = .88f), RoundedCornerShape(16.dp))
                 .clickable(enabled = step > 0) { step-- }, contentAlignment = Alignment.Center) {
-                Text(if (step > 0) "‹" else "g", color = GulpPalette.White,
-                    fontWeight = FontWeight.Bold, fontSize = if (step > 0) 32.sp else 28.sp)
+                if (step > 0) Text("‹", color = GulpPalette.White,
+                    fontWeight = FontWeight.Bold, fontSize = 32.sp)
+                else WaterAdaptiveSubmark(scene, viewport, Modifier.size(34.dp))
             }
             WaterAdaptiveText("${step + 1} of 3", scene, viewport, fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold)
         }
         Spacer(Modifier.height(17.dp))
-        Canvas(Modifier.fillMaxWidth().height(7.dp)) {
-            drawRoundRect(Color.White.copy(alpha = .16f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
-            drawRoundRect(Brush.horizontalGradient(listOf(GulpPalette.Glacier, GulpPalette.LiquidTop)),
-                size = androidx.compose.ui.geometry.Size(size.width * progress, size.height),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2))
+        val wavePhase by androidx.compose.animation.core.rememberInfiniteTransition(label = "setup wave")
+            .animateFloat(initialValue = 0f, targetValue = 6.2831855f,
+                animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                    animation = tween(1900, easing = LinearEasing)), label = "wave offset")
+        Canvas(Modifier.fillMaxWidth().height(9.dp)) {
+            drawRoundRect(Color.White.copy(alpha = .15f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height / 2f))
+            val filled = size.width * progress
+            val water = Path().apply {
+                moveTo(0f, size.height)
+                lineTo(0f, size.height * .38f)
+                val step = 4f
+                var x = 0f
+                while (x <= filled) {
+                    val waveY = size.height * (.40f + .19f * kotlin.math.sin((if (scene.reducedMotion) 0f else wavePhase) + x / 27f))
+                    lineTo(x, waveY)
+                    x += step
+                }
+                lineTo(filled, size.height)
+                close()
+            }
+            clipPath(Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(
+                0f, 0f, size.width, size.height,
+                androidx.compose.ui.geometry.CornerRadius(size.height / 2f))) }) {
+                drawPath(water, Brush.horizontalGradient(listOf(GulpPalette.Glacier, GulpPalette.LiquidTop)))
+            }
         }
         Spacer(Modifier.height(21.dp))
         Box(Modifier.weight(1f).fillMaxWidth()) {
             AnimatedContent(targetState = step,
                 transitionSpec = { fadeIn(tween(350)) togetherWith fadeOut(tween(200)) },
                 label = "onboarding step") { current ->
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                GlassScrollableColumn(Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(17.dp)) {
                     val title = when (current) {

@@ -20,7 +20,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
       - name: Install Android SDK 36
         run: |
           yes | sdkmanager --licenses >/dev/null || true
@@ -36,6 +38,7 @@ jobs:
           python3 tools/verify_brand_identity.py
           python3 tools/verify_ui_refresh.py
           python3 tools/verify_ui_review_02.py
+          python3 tools/verify_glass_ui.py
       - name: Compile, test, lint and package
         run: |
           gradle --version

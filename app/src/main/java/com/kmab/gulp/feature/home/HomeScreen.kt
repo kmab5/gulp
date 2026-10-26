@@ -74,6 +74,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.kmab.gulp.core.design.GulpPalette
+import com.kmab.gulp.core.design.GlassSurface
+import com.kmab.gulp.core.design.GlassScrollEdges
 import com.kmab.gulp.core.domain.HomeTile
 import com.kmab.gulp.core.domain.HomeTileRules
 import com.kmab.gulp.core.graphics.WaterAdaptiveText
@@ -96,6 +98,7 @@ fun HomeScreen(
     var tileToEdit by remember { mutableStateOf<HomeTile?>(null) }
     var addTile by remember { mutableStateOf(false) }
     val bounds = remember { mutableStateMapOf<String, Rect>() }
+    val homeScroll = rememberScrollState()
     LaunchedEffect(tiles) { if (!editing) draft = tiles }
     LaunchedEffect(editRequest) {
         if (editRequest > 0) { draft = tiles; editing = true; onEditRequestHandled() }
@@ -106,7 +109,7 @@ fun HomeScreen(
         total + if (units == 2 && total % 2 == 1) 1 + units else units
     } + if (editing && draft.size < HomeTileRules.MAX_TILES) 1 else 0
     val rows = (gridUnits + 1) / 2
-    val gridHeight = (rows * 112 - 12).coerceAtLeast(100)
+    val gridHeight = (rows * 110 - 10).coerceAtLeast(100)
     val gridGuideAlpha by animateFloatAsState(if (editing) .38f else 0f,
         animationSpec = tween(250), label = "edit grid guides")
 
@@ -141,25 +144,14 @@ fun HomeScreen(
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                .drawWithContent {
-                    drawContent()
-                    // Destination-in fade removes abrupt scroll cutoffs without painting over the live water.
-                    drawRect(Brush.verticalGradient(
-                        0f to Color.Transparent, .065f to Color.White,
-                        .90f to Color.White, 1f to Color.Transparent), blendMode = BlendMode.DstIn)
-                }.padding(vertical = 16.dp),
+            Column(Modifier.fillMaxSize().verticalScroll(homeScroll).padding(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(19.dp)) {
-                Box(Modifier.fillMaxWidth()
-                    .background(Brush.linearGradient(listOf(
-                        Color(0xFFB8FFFF).copy(alpha = .40f),
-                        Color(0xFF4CC4D0).copy(alpha = .24f))), RoundedCornerShape(22.dp))
-                    .border(1.5.dp, Color.White.copy(alpha = .53f), RoundedCornerShape(22.dp))
-                    .clickable(onClickLabel = "Add a drink", onClick = onAddDrink)
-                    .padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
+                GlassSurface(Modifier.fillMaxWidth().height(64.dp)
+                    .clickable(onClickLabel = "Add a drink", onClick = onAddDrink), radius = 22, tint = .24f) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     WaterAdaptiveText("+   Add a drink", scene, viewport,
                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                    }
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween) {
@@ -183,14 +175,28 @@ fun HomeScreen(
                     Canvas(Modifier.matchParentSize()) {
                         if (gridGuideAlpha > .001f) {
                             val gap = 10.dp.toPx()
-                            val rowStep = 112.dp.toPx()
+                            val rowStep = 110.dp.toPx()
                             val tileHeight = 100.dp.toPx()
-                            val width = (size.width - gap) / 2f
-                            for (row in 0 until rows) for (col in 0..1) {
+                            val slot = (size.width - gap) / 2f
+                            var cell = 0
+                            for (tile in displayed) {
+                                val span = if (tile.wide) 2 else 1
+                                if (span == 2 && cell % 2 == 1) cell++
+                                val row = cell / 2
+                                val col = cell % 2
                                 drawRoundRect(color = GulpPalette.Glacier.copy(alpha = gridGuideAlpha),
-                                    topLeft = Offset(col * (width + gap), row * rowStep),
-                                    size = Size(width, tileHeight),
-                                    cornerRadius = CornerRadius(19.dp.toPx()),
+                                    topLeft = Offset(col * (slot + gap), row * rowStep),
+                                    size = Size(if (span == 2) size.width else slot, tileHeight),
+                                    cornerRadius = CornerRadius(20.dp.toPx()),
+                                    style = Stroke(width = 1.dp.toPx()))
+                                cell += span
+                            }
+                            if (editing && draft.size < HomeTileRules.MAX_TILES) {
+                                val row = cell / 2
+                                val col = cell % 2
+                                drawRoundRect(GulpPalette.Glacier.copy(alpha = gridGuideAlpha),
+                                    topLeft = Offset(col * (slot + gap), row * rowStep),
+                                    size = Size(slot, tileHeight), cornerRadius = CornerRadius(20.dp.toPx()),
                                     style = Stroke(width = 1.dp.toPx()))
                             }
                         }
@@ -234,6 +240,7 @@ fun HomeScreen(
                         scene, viewport, fontSize = 12.sp)
                 }
             }
+            GlassScrollEdges(homeScroll)
         }
         Column(Modifier.fillMaxWidth().padding(top = 29.dp, bottom = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -319,7 +326,7 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
         )
     } else Modifier
     val shape = RoundedCornerShape(20.dp)
-    Column(modifier
+    GlassSurface(modifier
         .onGloballyPositioned { coordinates ->
             val newOrigin = coordinates.boundsInRoot().topLeft
             val previous = layoutOrigin
@@ -334,14 +341,10 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
         .offset { IntOffset(dragX.roundToInt(), dragY.roundToInt()) }
         .zIndex(if (dragging) 3f else 0f)
         .height(100.dp)
-        .background(Brush.linearGradient(listOf(
-            Color(0xFFD5FFFF).copy(alpha = if (editing) .28f else .34f),
-            Color(0xFF4C94A9).copy(alpha = .31f),
-            Color(0xFF143C55).copy(alpha = .45f))), shape)
-        .border(1.dp, Color.White.copy(alpha = if (editing) .59f else .35f), shape)
         .clickable(onClick = onClick)
-        .padding(horizontal = 14.dp, vertical = 13.dp),
-        verticalArrangement = Arrangement.SpaceBetween) {
+        , radius = 20, tint = .17f) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 13.dp),
+            verticalArrangement = Arrangement.SpaceBetween) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
             WaterAdaptiveText(tile.kind.title, scene, viewport, fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -356,5 +359,6 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
         }
         WaterAdaptiveText("${tile.amountMl} mL", scene, viewport,
             fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        }
     }
 }

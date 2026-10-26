@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.kmab.gulp.core.design.GlassScrollableColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -44,7 +45,7 @@ fun RemindersScreen(
     val context = LocalContext.current
     val plan = preferences.reminders
     val next = ReminderRules.nextAlarm(nowMillis, ZoneId.systemDefault(), plan)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
+    GlassScrollableColumn(Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 31.dp),
         verticalArrangement = Arrangement.spacedBy(17.dp)) {
         WaterAdaptiveText("Reminders", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 22.dp) {

@@ -45,8 +45,8 @@ android {
         applicationId = "com.kmab.gulp"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.6.4-rc5"
+        versionCode = 11
+        versionName = "0.6.5-rc6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

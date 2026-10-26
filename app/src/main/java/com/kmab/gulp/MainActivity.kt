@@ -60,6 +60,8 @@ import com.kmab.gulp.core.data.GulpPreferences
 import com.kmab.gulp.core.data.GulpPreferencesStore
 import com.kmab.gulp.core.data.GulpRepository
 import com.kmab.gulp.core.design.GulpPalette
+import com.kmab.gulp.core.design.LocalGlassScene
+import com.kmab.gulp.core.design.LocalGlassViewport
 import com.kmab.gulp.core.design.GulpToggleRow
 import com.kmab.gulp.core.domain.DrinkKind
 import com.kmab.gulp.core.domain.DrinkRecord
@@ -194,10 +196,12 @@ fun GulpApp(active: Boolean = true) {
     if (!preferences.hasCompletedOnboarding) {
         Box(Modifier.fillMaxSize().onSizeChanged { viewport = it }) {
             WaterBackdrop(scene)
+            CompositionLocalProvider(LocalGlassScene provides scene, LocalGlassViewport provides viewport) {
             OnboardingScreen(scene, viewport, onComplete = { plan, reference, medical ->
                 scope.launch { preferencesStore.finishOnboarding(plan, reference, medical) }
                 if (plan.enabled && !medical && !notificationPermission) requestPermission()
             })
+            }
         }
         return
     }
@@ -222,7 +226,8 @@ fun GulpApp(active: Boolean = true) {
     }
     WaterTiltSensor(scene, active, preferences.tiltEnabled)
 
-    CompositionLocalProvider(LocalStrongerContrast provides preferences.strongerContrast) {
+    CompositionLocalProvider(LocalStrongerContrast provides preferences.strongerContrast,
+        LocalGlassScene provides scene, LocalGlassViewport provides viewport) {
     Box(Modifier.fillMaxSize().onSizeChanged { viewport = it }.waterTouchFeedback(scene, preferences.touchRipplesEnabled)) {
         WaterBackdrop(scene)
         Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)) {

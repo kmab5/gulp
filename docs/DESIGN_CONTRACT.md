@@ -59,3 +59,8 @@ Home now logs real drinks with configurable quick-add tiles, and History reads a
 ## UI quality review 02 (2026-10-21)
 The accepted alternatives and remaining device checks are enumerated in `UI_FEEDBACK_AUDIT.md`.
 Shared controls use custom animation, the radio highlight is distinct from the switch highlight, and onboarding headings use the same live contrast mask as Home. Actual scene backdrop Gaussian blur remains deliberately unimplemented in favor of a low-cost layered frosted treatment; only real-device profiling can justify a more expensive effect.
+
+
+## October 26 UI Review 03
+
+Fluid Nucleus is the launcher/onboarding mark. All shared frosted surfaces must include the actual fluid artwork *under* the blur effect on API 31+, not merely a translucent fill. The navbar has no island: only selected-tab glass. Nav glyphs are always white and drawn once to avoid outlined text/icons. Scroll-edge glass is conditional on `canScrollBackward`/`canScrollForward`. See `UI_REVIEW_03.md` for trade-offs and device acceptance.

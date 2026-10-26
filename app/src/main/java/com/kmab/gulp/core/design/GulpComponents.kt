@@ -52,28 +52,16 @@ fun Note(text: String, modifier: Modifier = Modifier, color: Color = GulpPalette
     Text(text, modifier, fontSize = 13.sp, color = color, lineHeight = 19.sp)
 }
 
-/** Layered translucency and specular borders. No heavyweight image asset or perpetual blur animation. */
+/** Reusable genuine fluid-backdrop glass surface. */
 @Composable
 fun FrostPanel(
     modifier: Modifier = Modifier,
     padding: Dp = 18.dp,
     content: @Composable () -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .background(
-                Brush.linearGradient(listOf(
-                    Color(0xFF447C93).copy(alpha = .50f),
-                    Color(0xFF173E59).copy(alpha = .69f),
-                    Color(0xFF0C3049).copy(alpha = .77f)
-                )), PanelShape
-            )
-            .border(1.dp, Brush.linearGradient(listOf(
-                Color.White.copy(alpha = .42f), GulpPalette.Glacier.copy(alpha = .13f),
-                Color.White.copy(alpha = .23f)
-            )), PanelShape)
-            .padding(padding)
-    ) { content() }
+    GlassSurface(modifier = modifier, radius = 23) {
+        Box(Modifier.padding(padding)) { content() }
+    }
 }
 
 @Composable

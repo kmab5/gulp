@@ -1,3 +1,13 @@
+## v0.6.5-rc6 — UI Review 03 (26 October 2026)
+
+- Fix Android GitHub CI failing in `android-actions/setup-android@v3` (`sdkmanager tools` removed) by using v4 without retired packages.
+- Add scene-aware blurred glass behind cards and selected navigation; earlier flat tint alone was not blur.
+- Add conditional, direction-sensitive frosted scroll edges to onboarding/Home/Reminders/History/Review/Settings. Only visible when that edge has overflow.
+- Replace overlapping white/dark text rendering with complementary waterline clips; navbar glyphs render crisp solid white with no global bar background.
+- Improve nav icon/label motion and edit-grid guide alignment. Introduce Fluid Nucleus to onboarding progress header, wave progress fill.
+- Add browser-linked feedback and About in Settings, grounded in kmab-feedback integration docs.
+- Release versionCode 11 and source/CI verification. On-device quality review required.
+
 ## Branding update — Fluid Nucleus
 - Updated launcher with three-layer organic mark and true monochrome themed icon.
 - Home header toggles gulp text / mono submark and preserves waterline adaptive contrast.

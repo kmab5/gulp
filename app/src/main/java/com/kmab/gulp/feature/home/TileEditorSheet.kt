@@ -43,7 +43,8 @@ fun TileEditorSheet(
     var wide by remember(tile?.id) { mutableStateOf(tile?.wide ?: false) }
     val ml = amount.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = GulpPalette.DeepBlue, contentColor = GulpPalette.White) {
+        containerColor = androidx.compose.ui.graphics.Color(0xEE102F46),
+        contentColor = GulpPalette.White) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 36.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (tile == null) "New shortcut" else "Edit shortcut", fontSize = 25.sp, fontWeight = FontWeight.Bold)

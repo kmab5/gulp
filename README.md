@@ -1,3 +1,7 @@
+# gulp — Android
+
+**v0.6.5-rc6 — UI Review 03**. Screens and updated design notes in `docs/UI_REVIEW_03.md`. This includes conditional glass scroll edges, live fluid backdrop glass, feedback/about Settings links, and the Android CI setup fix. Native Android build + device visual validation remain required.
+
 # gulp — native Android hydration app
 
 **Version 0.6.4-rc5 · Kotlin / Jetpack Compose · Android 9+ · fully offline by default**

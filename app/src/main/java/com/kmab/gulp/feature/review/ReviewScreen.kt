@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.kmab.gulp.core.design.GlassScrollableColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,7 +40,7 @@ fun ReviewScreen(scene: WaterScene, viewport: IntSize, records: List<DrinkRecord
     val zone = ZoneId.systemDefault()
     val review = remember(records, today, zone) { ReviewRules.summarize(records, today, zone) }
     val recorded = review.entries > 0
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+    GlassScrollableColumn(Modifier.fillMaxSize()
         .padding(horizontal = 22.dp, vertical = 31.dp), verticalArrangement = Arrangement.spacedBy(17.dp)) {
         WaterAdaptiveText("Review", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 20.dp) {

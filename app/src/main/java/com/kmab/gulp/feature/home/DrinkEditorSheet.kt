@@ -61,7 +61,8 @@ fun DrinkEditorSheet(
     val parsed = text.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onClose, sheetState = sheetState,
-        containerColor = GulpPalette.DeepBlue, contentColor = GulpPalette.White) {
+        containerColor = androidx.compose.ui.graphics.Color(0xEE102F46),
+        contentColor = GulpPalette.White) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 38.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (existing == null) "Add a drink" else "Edit drink", fontSize = 26.sp, fontWeight = FontWeight.Bold)

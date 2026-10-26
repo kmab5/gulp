@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.kmab.gulp.core.design.GlassScrollableColumn
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
@@ -37,7 +41,23 @@ fun SettingsScreen(
     onExport: () -> Unit, onDeleteAll: () -> Unit
 ) {
     val visualCapacityMl = preferences.visualCapacityMl
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 31.dp),
+    val context = LocalContext.current
+    val version = remember(context) {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+            .getOrNull() ?: "unknown"
+    }
+    fun openWeb(url: Uri) {
+        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, url).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+    fun feedback(type: String) {
+        openWeb(Uri.parse("https://kmab5.github.io/kmab-feedback/").buildUpon()
+            .appendQueryParameter("product", "gulp")
+            .appendQueryParameter("type", type)
+            .appendQueryParameter("source", "android")
+            .appendQueryParameter("version", version)
+            .build())
+    }
+    GlassScrollableColumn(Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 31.dp),
         verticalArrangement = Arrangement.spacedBy(19.dp)) {
         WaterAdaptiveText("Settings", scene, viewport, fontSize = 23.sp, fontWeight = FontWeight.Bold)
         FrostPanel(Modifier.fillMaxWidth(), padding = 20.dp) {
@@ -108,6 +128,29 @@ fun SettingsScreen(
                 AppearanceToggle("Stronger text contrast", "High-contrast text above and below the water", preferences.strongerContrast) {
                     onAppearanceChange(preferences.reduceMotion, preferences.tiltEnabled, preferences.touchRipplesEnabled, it)
                 }
+            }
+        }
+        FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Feedback", color = GulpPalette.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Note("Opens the feedback form in your browser. You choose what to share.")
+                PreferenceRow("Report a bug", "Tell me what went wrong", onClick = { feedback("bug") })
+                PreferenceRow("Suggest an improvement", "Help make gulp better", onClick = { feedback("improvement") })
+                PreferenceRow("Share an idea", "Request a feature", onClick = { feedback("idea") })
+            }
+        }
+        FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("About gulp", color = GulpPalette.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Note("A gentle reminder and record of the drinks you log. Created by kmab.")
+                Note("Version $version · Android · Offline-first")
+                PreferenceRow("Source code", "github.com/kmab5/gulp", onClick = {
+                    openWeb(Uri.parse("https://github.com/kmab5/gulp"))
+                })
+                PreferenceRow("Developer", "kmab5 on GitHub", onClick = {
+                    openWeb(Uri.parse("https://github.com/kmab5"))
+                })
+                Note("gulp doesn't measure hydration or replace medical advice.")
             }
         }
         FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {

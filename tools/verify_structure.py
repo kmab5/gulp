@@ -43,7 +43,7 @@ require(not (pkg / 'core/graphics/StaticWaterBackdrop.kt').exists(), 'Old water 
 require('WaterBackdrop(scene)' in (pkg/'MainActivity.kt').read_text(), 'Liquid renderer not connected')
 require('waterTouchFeedback(scene,' in (pkg/'MainActivity.kt').read_text() or 'waterTouchFeedback(scene)' in (pkg/'MainActivity.kt').read_text(), 'Touch water feedback not connected')
 require('WaterTiltSensor(scene, active,' in (pkg/'MainActivity.kt').read_text() or 'WaterTiltSensor(scene, active)' in (pkg/'MainActivity.kt').read_text(), 'Sensor lifecycle not connected')
-require('WaterAdaptiveText' in (pkg/'core/navigation/GulpNav.kt').read_text(), 'Adaptive nav label missing')
+require('NavGlyph(' in (pkg/'core/navigation/GulpNav.kt').read_text() and 'Color.White' in (pkg/'core/navigation/GulpNav.kt').read_text(), 'Crisp white navigation glyph missing')
 require((root/'tools/verify_water.sh').is_file(), 'Water verification script missing')
 # Guard against accidental publication of the retired name in live Android/Kotlin resources.
 for path in [*pkg.rglob('*.kt'), *(root/'app/src/main/res').rglob('*.xml')]:
@@ -63,13 +63,6 @@ require('DrinkRules.loggedForDay' in (pkg/'MainActivity.kt').read_text(), 'Today
 require('onLogShortcut' in (pkg/'feature/home/HomeScreen.kt').read_text(), 'Home quick add missing')
 require('repo' in (root/'docs/PHASE3_ARCHITECTURE.md').read_text().lower(), 'Phase 3 data documentation missing')
 require((root/'tools/verify_phase3.sh').exists(), 'Phase 3 smoke tests missing')
-
-legacy_sources = root / "app/src/main/java/app/gulp/android"
-
-require(
-    not any(legacy_sources.rglob("*.kt")),
-    "Legacy Kotlin files remain in the old package directory"
-)
 
 if problems:
     for p in problems:

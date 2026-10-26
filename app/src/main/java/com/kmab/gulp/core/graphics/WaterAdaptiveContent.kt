@@ -55,7 +55,8 @@ fun WaterAdaptiveText(
     Box(modifier = modifier) {
         Text(text, color = lightColor, fontSize = fontSize, fontWeight = fontWeight,
             letterSpacing = letterSpacing, lineHeight = lineHeight,
-            textAlign = textAlign, maxLines = maxLines)
+            textAlign = textAlign, maxLines = maxLines,
+            modifier = Modifier.waterAboveClip(scene, viewport))
         Text(text, color = darkColor, fontSize = fontSize, fontWeight = fontWeight,
             letterSpacing = letterSpacing, lineHeight = lineHeight,
             textAlign = textAlign, maxLines = maxLines,
@@ -64,9 +65,18 @@ fun WaterAdaptiveText(
     }
 }
 
-/** Apply only to noninteractive DRAWING copies. Never clip input regions to the waterline. */
+/** Clip both colors to complementary waterline halves: no overpaint/white outlines. */
 @Composable
-fun Modifier.waterBelowClip(scene: WaterScene, viewport: IntSize): Modifier {
+fun Modifier.waterAboveClip(scene: WaterScene, viewport: IntSize): Modifier =
+    waterSideClip(scene, viewport, below = false)
+
+@Composable
+fun Modifier.waterBelowClip(scene: WaterScene, viewport: IntSize): Modifier =
+    waterSideClip(scene, viewport, below = true)
+
+/** Apply only to noninteractive DRAWING copies; visual masks must not clip taps. */
+@Composable
+private fun Modifier.waterSideClip(scene: WaterScene, viewport: IntSize, below: Boolean): Modifier {
     var rootOrigin by remember { mutableStateOf(Offset.Zero) }
     return this.onGloballyPositioned { rootOrigin = it.positionInRoot() }
         .drawWithContent {
@@ -77,16 +87,23 @@ fun Modifier.waterBelowClip(scene: WaterScene, viewport: IntSize): Modifier {
             if (w <= 0 || h <= 0) return@drawWithContent
             val path = Path()
             val steps = (w / rootW * 64f).toInt().coerceIn(8, 64)
+            if (!below) {
+                path.moveTo(0f, 0f)
+                path.lineTo(w, 0f)
+            }
             for (i in 0..steps) {
-                val localX = w * i / steps
+                val localX = if (below) w * i / steps else w * (steps - i) / steps
                 val globalX = (rootOrigin.x + localX) / rootW
                 val globalY = WaterMath.surfaceY(globalX, scene.fill, scene.tilt,
                     scene.seconds, scene.impulses, !scene.reducedMotion) * rootH
                 val localY = globalY - rootOrigin.y
-                if (i == 0) path.moveTo(0f, localY) else path.lineTo(localX, localY)
+                if (i == 0 && below) path.moveTo(0f, localY)
+                else path.lineTo(localX, localY)
             }
-            path.lineTo(w, h)
-            path.lineTo(0f, h)
+            if (below) {
+                path.lineTo(w, h)
+                path.lineTo(0f, h)
+            }
             path.close()
             clipPath(path) { this@drawWithContent.drawContent() }
         }
