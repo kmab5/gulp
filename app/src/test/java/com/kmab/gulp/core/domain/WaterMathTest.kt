@@ -7,10 +7,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WaterMathTest {
-    @Test fun floorIsVisualOnly() {
-        assertEquals(.25f, WaterMath.visibleFill(0f), .00001f)
+    @Test
+    fun waterCanFallBelowNavbar() {
+        assertEquals(0f, WaterMath.visibleFill(0f), .00001f)
         assertEquals(.96f, WaterMath.visibleFill(5f), .00001f)
-        assertEquals(.5f, WaterMath.surfaceY(.5f, .5f, 0f, 0f, emptyList(), false), .00001f)
+        assertEquals(
+            .5f,
+            WaterMath.surfaceY(.5f, .5f, 0f, 0f, emptyList(), false),
+            .00001f
+        )
+        assertTrue(
+            WaterMath.surfaceY(.5f, 0f, 0f, 0f, emptyList(), false) > 1f
+        )
     }
 
     @Test fun tiltPreservesCenterOfVolumeAndClamps() {
