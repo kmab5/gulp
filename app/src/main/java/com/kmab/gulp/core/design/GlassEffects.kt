@@ -3,6 +3,9 @@ package com.kmab.gulp.core.design
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +40,7 @@ import com.kmab.gulp.core.graphics.WaterScene
 
 /** Glass samples the *same* fluid state as the backdrop. No screenshot readback or texture assets. */
 val LocalGlassScene = staticCompositionLocalOf<WaterScene?> { null }
+val LocalGlassEnabled = staticCompositionLocalOf { true }
 val LocalGlassViewport = staticCompositionLocalOf { IntSize.Zero }
 
 /**
@@ -89,7 +93,10 @@ fun GlassSurface(modifier: Modifier = Modifier,
                  content: @Composable BoxScope.() -> Unit) {
     val shape = RoundedCornerShape(radius.dp)
     Box(modifier.clip(shape)) {
-        GlassWaterLayer(Modifier.matchParentSize())
+        if (LocalGlassEnabled.current) GlassWaterLayer(Modifier.matchParentSize())
+        else Canvas(Modifier.matchParentSize()) {
+            drawRect(GulpPalette.DeepBlue.copy(alpha = .75f))
+        }
         Box(Modifier.matchParentSize().graphicsLayer { alpha = tint }) {
             Canvas(Modifier.matchParentSize()) {
                 drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha=.77f),
@@ -108,37 +115,58 @@ fun GlassSurface(modifier: Modifier = Modifier,
 }
 
 /**
- * Conditional frosted scroll edges. Does not draw a permanent dark cover. The overlay
- * shows only if the matching direction contains clipped/hidden content.
+ * Draw the scrolling content once into a reusable graphics layer. Draw it normally, then
+ * re-draw blurred versions *only* in clipped 24dp boundary strips when scrolling is possible.
+ * This is a real blur of the actual text/cards, not a translucent dark water overlay.
+ * Available on Android 12+; on older devices preserve sharp content instead of a dark scrim.
  */
 @Composable
-fun BoxScope.GlassScrollEdges(scrollState: ScrollState, modifier: Modifier = Modifier) {
-    val top by animateFloatAsState(if (scrollState.canScrollBackward) 1f else 0f,
-        animationSpec = tween(220), label = "scroll top glass")
-    val bottom by animateFloatAsState(if (scrollState.canScrollForward) 1f else 0f,
-        animationSpec = tween(220), label = "scroll bottom glass")
-    if (top > .001f) {
-        GlassScrollEdge(modifier.align(Alignment.TopCenter).graphicsLayer { alpha = top }, top = true)
-    }
-    if (bottom > .001f) {
-        GlassScrollEdge(modifier.align(Alignment.BottomCenter).graphicsLayer { alpha = bottom }, top = false)
-    }
-}
-
-@Composable
-private fun GlassScrollEdge(modifier: Modifier, top: Boolean) {
-    Box(modifier.fillMaxWidth().height(25.dp)) {
-        GlassWaterLayer(Modifier.matchParentSize(), blurDp = 20)
-        Canvas(Modifier.matchParentSize()) {
-            // A transparent-to-clear frost, not a dark scrim.
-            drawRect(Brush.verticalGradient(if (top)
-                listOf(Color.White.copy(alpha=.20f), Color.Transparent) else
-                listOf(Color.Transparent, Color.White.copy(alpha=.20f))))
+fun Modifier.conditionalScrollBlur(
+    canScrollBack: () -> Boolean,
+    canScrollForward: () -> Boolean
+): Modifier {
+    val sharpLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+    val blurLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+    return this.drawWithContent {
+        val above = canScrollBack()
+        val below = canScrollForward()
+        // Avoid GPU layer recording when the contents fit or RenderEffect is unsupported.
+        if (android.os.Build.VERSION.SDK_INT < 31 || (!above && !below)) {
+            drawContent()
+        } else {
+            sharpLayer.record { this@drawWithContent.drawContent() }
+            drawLayer(sharpLayer)
+            blurLayer.record { this@drawWithContent.drawContent() }
+            blurLayer.renderEffect = androidx.compose.ui.graphics.BlurEffect(
+                12.dp.toPx(), 12.dp.toPx(), androidx.compose.ui.graphics.TileMode.Decal)
+            val edge = 28.dp.toPx().coerceAtMost(size.height / 2f)
+            // Graduated, transparent strips: no opaque scrim and no hard blur boundary.
+            val bands = floatArrayOf(1f, .69f, .37f)
+            val alphas = floatArrayOf(.24f, .38f, .64f)
+            for (i in bands.indices) {
+                val extent = edge * bands[i]
+                blurLayer.alpha = alphas[i]
+                if (above) {
+                    clipRect(0f, 0f, size.width, extent) { drawLayer(blurLayer) }
+                }
+                if (below) {
+                    clipRect(0f, size.height - extent, size.width, size.height) {
+                        drawLayer(blurLayer)
+                    }
+                }
+            }
+            blurLayer.alpha = 1f
         }
     }
 }
 
-/** A single scroll host used by all five content tabs; edge frost is not always-on. */
+/** Compatibility helper for the Home view; no permanent edge overlays. */
+@Composable
+fun BoxScope.GlassScrollEdges(scrollState: ScrollState, modifier: Modifier = Modifier) {
+    // Intentionally empty: use conditionalScrollBlur on the scroll viewport itself.
+}
+
+/** All secondary tabs use the same actual-content blur, conditional on scroll boundaries. */
 @Composable
 fun GlassScrollableColumn(
     modifier: Modifier = Modifier,
@@ -147,13 +175,12 @@ fun GlassScrollableColumn(
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
 ) {
     val scroll = androidx.compose.foundation.rememberScrollState()
-    Box(modifier) {
+    Box(modifier.conditionalScrollBlur({ scroll.canScrollBackward }, { scroll.canScrollForward })) {
         androidx.compose.foundation.layout.Column(
             Modifier.fillMaxSize().verticalScroll(scroll),
             verticalArrangement = verticalArrangement,
             horizontalAlignment = horizontalAlignment,
             content = content
         )
-        GlassScrollEdges(scroll)
     }
 }

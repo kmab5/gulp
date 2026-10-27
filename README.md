@@ -1,3 +1,7 @@
+# gulp v0.6.7-rc8 — screen updates
+
+Round 08 builds on v0.6.6-rc7. See [`docs/ROUND08_SCREEN_COMPLETION.md`](docs/ROUND08_SCREEN_COMPLETION.md) for changes, safeguards and device acceptance tests. Native Android compilation is pending.
+
 # gulp — Android
 
 **v0.6.5-rc6 — UI Review 03**. Screens and updated design notes in `docs/UI_REVIEW_03.md`. This includes conditional glass scroll edges, live fluid backdrop glass, feedback/about Settings links, and the Android CI setup fix. Native Android build + device visual validation remain required.
@@ -100,3 +104,7 @@ The water fill is an artistic representation of **recorded fluid volume**, not a
 ## Fluid Nucleus identity
 
 Official approved identity: Fluid Nucleus / Option A. The Home header tap toggles the wordmark and water-adaptive monochrome submark. Source vectors: `design/brand/`, `docs/BRAND_FLUID_NUCLEUS.md`. Launcher background is pale to preserve foreground contrast.
+
+## Shared-foundations update — 0.6.6-rc7
+
+See [`docs/ROUND07_SHARED_FOUNDATIONS.md`](docs/ROUND07_SHARED_FOUNDATIONS.md) for database migration, drink catalog, shared scrolling and tab-swipe navigation, test plan and next-round scope. The local release key `build-key` and `keystore.properties` remain private and unchanged.

@@ -14,9 +14,9 @@ class DrinkCsvTest {
         val first = DrinkRecord(1, 250, DrinkKind.WATER, Instant.parse("2026-10-20T07:00:00Z").toEpochMilli())
         val second = DrinkRecord(2, 200, DrinkKind.COFFEE, Instant.parse("2026-10-20T10:30:00Z").toEpochMilli())
         val encoded = DrinkCsv.encode(listOf(second, first))
-        assertEquals("id,timestamp_utc,drink_type,amount_ml\n" +
-            "1,2026-10-20T07:00:00Z,WATER,250\n" +
-            "2,2026-10-20T10:30:00Z,COFFEE,200\n", encoded)
+        assertEquals(DrinkCsv.HEADER + "\n" +
+            "1,2026-10-20T07:00:00Z,WATER,250,\"water\",\"Water\",\"water\"\n" +
+            "2,2026-10-20T10:30:00Z,COFFEE,200,\"coffee\",\"Coffee\",\"coffee\"\n", encoded)
         assertTrue(encoded.endsWith('\n'))
     }
 }

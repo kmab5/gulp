@@ -8,8 +8,8 @@ checks = {
     'core/design/GulpComponents.kt': ['fun GulpToggle(', 'fun GulpChoiceChip(', 'fun GulpChoiceRow(', 'fun GulpToggleRow(', 'Brush.linearGradient'],
     'core/navigation/GulpNav.kt': ['delay(1650)', 'NavGlyph(', 'Color.White', 'GulpTab.SETTINGS', 'GulpTab.REVIEW'],
     'feature/onboarding/OnboardingScreen.kt': ['AnimatedContent(', 'AnimatedVisibility(', 'customAmount', 'TimeButton(', 'Theme_Material_Dialog_Alert'],
-    'feature/home/HomeScreen.kt': ['LazyVerticalGrid(', '.animateItem(', 'detectDragGesturesAfterLongPress(', 'GlassScrollEdges(homeScroll)', 'onMove =', 'Quick add'],
-    'core/graphics/WaterMath.kt': ['* 0.32f'],
+    'feature/home/HomeScreen.kt': ['LazyVerticalGrid(', '.animateItem(', 'detectDragGesturesAfterLongPress(', 'conditionalScrollBlur(', 'onMove =', 'Quick add'],
+    'core/graphics/WaterMath.kt': ['* 0.40f'],
     'MainActivity.kt': ['darkColorScheme(', 'MaterialTheme('],
 }
 for rel, needles in checks.items():

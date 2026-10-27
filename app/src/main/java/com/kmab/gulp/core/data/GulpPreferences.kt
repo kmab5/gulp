@@ -27,7 +27,12 @@ data class GulpPreferences(
     val reduceMotion: Boolean = false,
     val tiltEnabled: Boolean = true,
     val touchRipplesEnabled: Boolean = true,
-    val strongerContrast: Boolean = false
+    val strongerContrast: Boolean = false,
+    val glassBlurEnabled: Boolean = true,
+    val swipeTabsEnabled: Boolean = true,
+    val motionStrengthPct: Int = 100,
+    val widgetDrinkTypeId: String = "water",
+    val widgetAmountMl: Int = 250
 )
 
 /** UI, receiver and alarm scheduler all read this single persistent source of truth. */
@@ -36,7 +41,12 @@ class GulpPreferencesStore(private val context: Context) {
     private val tiltKey = booleanPreferencesKey("tilt_enabled_v1")
     private val ripplesKey = booleanPreferencesKey("touch_ripples_enabled_v1")
     private val contrastKey = booleanPreferencesKey("stronger_contrast_v1")
+    private val glassKey = booleanPreferencesKey("glass_blur_enabled_v1")
+    private val swipeKey = booleanPreferencesKey("swipe_tabs_enabled_v1")
+    private val motionKey = intPreferencesKey("motion_strength_pct_v1")
     private val tileKey = stringPreferencesKey("home_tiles_v1")
+    private val widgetTypeKey = stringPreferencesKey("widget_drink_type_id_v2")
+    private val widgetAmountKey = intPreferencesKey("widget_amount_ml_v2")
     private val displayCapacityKey = intPreferencesKey("water_display_capacity_ml_v1")
     private val onboardKey = booleanPreferencesKey("onboarding_completed_v1")
     private val referenceKey = intPreferencesKey("tracking_reference_ml_v1")
@@ -70,7 +80,12 @@ class GulpPreferencesStore(private val context: Context) {
             reduceMotion = p[reduceMotionKey] ?: false,
             tiltEnabled = p[tiltKey] ?: true,
             touchRipplesEnabled = p[ripplesKey] ?: true,
-            strongerContrast = p[contrastKey] ?: false
+            strongerContrast = p[contrastKey] ?: false,
+            glassBlurEnabled = p[glassKey] ?: true,
+            swipeTabsEnabled = p[swipeKey] ?: true,
+            motionStrengthPct = (p[motionKey] ?: 100).coerceIn(25, 150),
+            widgetDrinkTypeId = p[widgetTypeKey] ?: "water",
+            widgetAmountMl = (p[widgetAmountKey] ?: 250).coerceIn(1, 5000)
         )
     }
 
@@ -81,6 +96,15 @@ class GulpPreferencesStore(private val context: Context) {
         require(tiles.distinctBy { it.id }.size == tiles.size)
         require(tiles.all { it.amountMl in 1..5000 })
         context.gulpDataStore.edit { it[tileKey] = HomeTileRules.encode(tiles) }
+    }
+
+    suspend fun setWidgetDrink(typeId: String, amountMl: Int) {
+        require(com.kmab.gulp.core.domain.DrinkTypeCatalog.validId(typeId))
+        require(amountMl in 1..5000)
+        context.gulpDataStore.edit { p ->
+            p[widgetTypeKey] = typeId
+            p[widgetAmountKey] = amountMl
+        }
     }
 
     suspend fun changeVisualCapacity(ml: Int) {
@@ -141,6 +165,15 @@ class GulpPreferencesStore(private val context: Context) {
             p[tiltKey] = tiltEnabled
             p[ripplesKey] = touchRipples
             p[contrastKey] = strongerContrast
+        }
+    }
+
+    suspend fun setExperience(glassEnabled: Boolean, swipeEnabled: Boolean, motionPercent: Int) {
+        require(motionPercent in 25..150)
+        context.gulpDataStore.edit { p ->
+            p[glassKey] = glassEnabled
+            p[swipeKey] = swipeEnabled
+            p[motionKey] = motionPercent
         }
     }
 

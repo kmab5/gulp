@@ -14,7 +14,7 @@ data class ReminderPlan(
 ) {
     val awakeDurationMinutes: Int get() = (awakeEndMinute - awakeStartMinute + 1440) % 1440
 
-    fun valid(): Boolean = intervalMinutes in 60..240 && intervalMinutes % 30 == 0 &&
+    fun valid(): Boolean = intervalMinutes in 30..360 &&
         awakeStartMinute in 0..1439 && awakeEndMinute in 0..1439 && awakeDurationMinutes in 60..1380
 }
 

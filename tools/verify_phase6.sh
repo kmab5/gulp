@@ -43,7 +43,7 @@ fun main() {
         val fill = DrinkRules.visualFill(amount,2000)
         verify(fill in 0f..1f, "visual fill outside range")
         verify(WaterMath.visibleFill(fill) in WaterMath.MIN_VISUAL_FILL..0.96f, "visible fill outside range")
-        for (x in 0..10) verify(WaterMath.surfaceY(x/10f,fill,0.3f,1f,emptyList(),true) in 0.025f..0.98f,
+        for (x in 0..10) verify(WaterMath.surfaceY(x/10f,fill,0.3f,1f,emptyList(),true) in 0.015f..1.12f,
             "water surface outside safe viewport")
     }
     println("PASS: $checks Phase 6 Kotlin assertions, including two DST boundaries and water bounds")
@@ -51,6 +51,7 @@ fun main() {
 KT
 kotlinc \
     app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkType.kt \
     app/src/main/java/com/kmab/gulp/core/domain/ReminderRules.kt \
     app/src/main/java/com/kmab/gulp/core/graphics/WaterMath.kt \
     "$TMP/Regression.kt" -include-runtime -d "$TMP/check.jar"
@@ -73,7 +74,7 @@ assert libs['versions']['kotlin']=='2.2.21'
 assert libs['versions']['ksp']=='2.2.21-2.0.5'
 assert libs['plugins']['ksp']['version']['ref']=='ksp'
 assert (root/'gradle/wrapper/gradle-wrapper.properties').exists()
-assert '0.6.5-rc6' in (root/'app/build.gradle.kts').read_text()
+assert '0.6.7-rc8' in (root/'app/build.gradle.kts').read_text()
 main=(root/'app/src/main/java/com/kmab/gulp/MainActivity.kt').read_text()
 assert 'nextReminderLabel = nextReminderLabel' in main
 assert 'if (plan.enabled && !preferences.clinicianManagedFluids && !notificationPermission)' in main

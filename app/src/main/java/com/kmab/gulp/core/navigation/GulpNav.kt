@@ -10,6 +10,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,7 +25,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
+import com.kmab.gulp.core.graphics.WaterAdaptiveText
+import com.kmab.gulp.core.graphics.waterAboveClip
+import com.kmab.gulp.core.graphics.waterBelowClip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,18 +101,23 @@ fun GulpNav(current: GulpTab, scene: WaterScene, viewport: IntSize,
                         phase.animateTo(1f, tween(700, easing = FastOutSlowInEasing))
                 }
                 Column(Modifier.weight(1f).height(74.dp)
-                    .clickable(role = Role.Tab, onClickLabel = "Open ${tab.label}") { onSelect(tab) }
+                    .clickable(interactionSource = remember { MutableInteractionSource() },
+                        indication = null, role = Role.Tab,
+                        onClickLabel = "Open ${tab.label}") { onSelect(tab) }
                     .semantics { contentDescription = tab.label; selected = selectedTab }
                     .padding(top = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Box(Modifier.size(28.dp).offset(y = iconShift), contentAlignment = Alignment.Center) {
-                        // Draw once in solid white. Previous overlapping light/dark copies
-                        // caused a pale raster halo on some OEM devices.
-                        NavGlyph(tab, scene, phase.value, selectedTab, Color.White)
+                        // The icon's two paints use complementary geometric clips, so
+                        // water crosses the glyph without a whole-icon color jump.
+                        NavGlyph(tab, scene, phase.value, selectedTab, Color.White,
+                            Modifier.waterAboveClip(scene, viewport))
+                        NavGlyph(tab, scene, phase.value, selectedTab, Color(0xFF071A2A),
+                            Modifier.waterBelowClip(scene, viewport))
                     }
                     Box(Modifier.graphicsLayer { alpha = labelAlpha }, contentAlignment = Alignment.Center) {
-                        Text(tab.label, color = Color.White, fontSize = 11.5.sp,
+                        WaterAdaptiveText(tab.label, scene, viewport, fontSize = 11.5.sp,
                             fontWeight = if (selectedTab) FontWeight.Bold else FontWeight.Medium,
                             maxLines = 1)
                     }
@@ -121,8 +129,8 @@ fun GulpNav(current: GulpTab, scene: WaterScene, viewport: IntSize,
 
 /** Stroke/solid variants, tiny one-shot icon gestures, and a shared low-amplitude water wobble. */
 @Composable
-private fun NavGlyph(tab: GulpTab, scene: WaterScene, activation: Float, filled: Boolean, tint: Color) {
-    Canvas(Modifier.size(24.dp).graphicsLayer {
+private fun NavGlyph(tab: GulpTab, scene: WaterScene, activation: Float, filled: Boolean, tint: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(24.dp).graphicsLayer {
         // Read frame state in layer placement, not parent recomposition.
         translationY = if (scene.reducedMotion) 0f else sin(scene.seconds * 1.10f + tab.ordinal * 1.3f) * 1.15.dp.toPx()
     }) {

@@ -1,3 +1,13 @@
+## v0.6.7-rc8 — all remaining screens (27 October 2026)
+
+- Navbar: remove decorative water reserve and use shared waterline clipping for active and inactive glyphs.
+- Home: frosted edit control, dialog backdrop blur and named drink creation directly from quick-add editors.
+- Reminders: 30–360 minute freeform intervals and Wake/Sleep glass controls.
+- History: calendar-first day selection and clearer day controls; editor date/time glass controls.
+- Review: 30-day activity, breakdown by stable drink type, time-of-day activity and logged-day averages.
+- Settings: fine-grained display slider, custom reference, toggleable glass/swiping and water motion intensity.
+- Add focused new tests, documentation and CI/source checks.
+
 ## v0.6.5-rc6 — UI Review 03 (26 October 2026)
 
 - Fix Android GitHub CI failing in `android-actions/setup-android@v3` (`sdkmanager tools` removed) by using v4 without retired packages.
@@ -83,3 +93,8 @@
 
 ## 0.1.0-phase1
 - Kotlin/Compose project foundation and five-tab shell.
+
+## 0.6.6-rc7 — shared foundations
+- Non-destructive persisted drink catalog, stable icon IDs, custom/widget presets, record snapshots, and CSV columns.
+- Water-adaptive text across the main tabs, conditional feathered scrolling-content blur and horizontal tab swipes. Navbar visual changes are reserved for a later round.
+- Tests and migration documentation; Android SDK compilation pending.

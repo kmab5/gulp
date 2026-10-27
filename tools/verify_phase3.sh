@@ -45,5 +45,6 @@ fun main() {
     println("PASS: $checks pure-Kotlin Phase 3 rules/shortcut/date assertions")
 }
 KT
-kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt "$TMP/Phase3Check.kt" -include-runtime -d "$TMP/phase3.jar"
+kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkType.kt "$TMP/Phase3Check.kt" -include-runtime -d "$TMP/phase3.jar"
 java -jar "$TMP/phase3.jar"

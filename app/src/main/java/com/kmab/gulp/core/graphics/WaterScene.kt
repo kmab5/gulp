@@ -27,7 +27,13 @@ class WaterScene {
         private set
     var reducedMotion by mutableStateOf(false)
         private set
+    var motionIntensity by mutableFloatStateOf(1f)
+        private set
     val impulses = mutableStateListOf<WaterImpulse>()
+
+    fun setMotionIntensity(value: Float) {
+        motionIntensity = value.coerceIn(.25f, 1.5f)
+    }
 
     fun setPreviewFill(value: Float) {
         targetFill = value.coerceIn(0f, 1f)
@@ -44,13 +50,13 @@ class WaterScene {
     }
 
     fun setGravityX(gravityX: Float) {
-        targetTilt = WaterMath.normalizedTilt(gravityX)
+        targetTilt = WaterMath.normalizedTilt(gravityX) * motionIntensity
     }
 
     fun disturb(x: Float, y: Float, power: Float = 0.45f) {
         if (reducedMotion) return
         if (impulses.size >= 12) impulses.removeAt(0)
-        impulses.add(WaterImpulse(x.coerceIn(0f, 1f), y.coerceIn(0f, 1f), power.coerceIn(0f, 2f), seconds))
+        impulses.add(WaterImpulse(x.coerceIn(0f, 1f), y.coerceIn(0f, 1f), (power * motionIntensity).coerceIn(0f, 2f), seconds))
     }
 
     fun frame(deltaSeconds: Float) {

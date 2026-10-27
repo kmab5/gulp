@@ -21,6 +21,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.geometry.Offset
+import kotlin.math.abs
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +58,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -60,10 +68,16 @@ import com.kmab.gulp.core.data.GulpPreferences
 import com.kmab.gulp.core.data.GulpPreferencesStore
 import com.kmab.gulp.core.data.GulpRepository
 import com.kmab.gulp.core.design.GulpPalette
+import com.kmab.gulp.core.design.LocalGlassEnabled
 import com.kmab.gulp.core.design.LocalGlassScene
 import com.kmab.gulp.core.design.LocalGlassViewport
 import com.kmab.gulp.core.design.GulpToggleRow
 import com.kmab.gulp.core.domain.DrinkKind
+import com.kmab.gulp.core.domain.DrinkType
+import com.kmab.gulp.core.domain.DrinkTypeCatalog
+import com.kmab.gulp.core.design.DrinkTypeEditor
+import com.kmab.gulp.core.design.WidgetDrinkEditor
+import com.kmab.gulp.widget.GulpWidgetRefresh
 import com.kmab.gulp.core.domain.DrinkRecord
 import com.kmab.gulp.core.domain.DrinkRules
 import com.kmab.gulp.core.domain.ReminderPlan
@@ -125,6 +139,9 @@ fun GulpApp(active: Boolean = true) {
     val repository = remember(context) { GulpRepository.create(context) }
     val preferencesStore = remember(context) { GulpPreferencesStore(context) }
     val records by repository.records.collectAsState(initial = emptyList())
+    val drinkTypes by repository.drinkTypes.collectAsState(initial = DrinkTypeCatalog.builtins)
+    var showDrinkTypes by remember { mutableStateOf(false) }
+    var showWidgetPreset by remember { mutableStateOf(false) }
     val loadedPreferences by produceState<GulpPreferences?>(initialValue = null, preferencesStore) {
         preferencesStore.settings.collect { value = it }
     }
@@ -224,13 +241,48 @@ fun GulpApp(active: Boolean = true) {
             scene.updateReducedMotion(systemReduced || preferences.reduceMotion)
         }
     }
+    LaunchedEffect(preferences.motionStrengthPct) {
+        scene.setMotionIntensity(preferences.motionStrengthPct / 100f)
+    }
     WaterTiltSensor(scene, active, preferences.tiltEnabled)
 
     CompositionLocalProvider(LocalStrongerContrast provides preferences.strongerContrast,
-        LocalGlassScene provides scene, LocalGlassViewport provides viewport) {
-    Box(Modifier.fillMaxSize().onSizeChanged { viewport = it }.waterTouchFeedback(scene, preferences.touchRipplesEnabled)) {
+        LocalGlassScene provides scene, LocalGlassViewport provides viewport,
+        LocalGlassEnabled provides preferences.glassBlurEnabled) {
+    Box(Modifier.fillMaxSize().blur(if (showDrinkSheet) 5.dp else 0.dp)
+        .onSizeChanged { viewport = it }.waterTouchFeedback(scene, preferences.touchRipplesEnabled)) {
         WaterBackdrop(scene)
-        Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)) {
+        Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)
+            .pointerInput(tabRoute, preferences.swipeTabsEnabled) {
+                if (preferences.swipeTabsEnabled) awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var horizontal = 0f
+                    var vertical = 0f
+                    var childConsumed = false
+                    var pressed = true
+                    while (pressed) {
+                        val event = awaitPointerEvent(PointerEventPass.Final)
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (change.isConsumed) childConsumed = true
+                        if (!childConsumed) {
+                            val delta = change.positionChange()
+                            horizontal += delta.x
+                            vertical += delta.y
+                        }
+                        pressed = change.pressed
+                    }
+                    val threshold = 95.dp.toPx()
+                    if (!childConsumed && abs(horizontal) > threshold &&
+                        abs(horizontal) > abs(vertical) * 1.5f) {
+                        val next = (tab.ordinal + if (horizontal < 0f) 1 else -1)
+                            .coerceIn(0, GulpTab.entries.lastIndex)
+                        if (next != tab.ordinal) {
+                            tabRoute = GulpTab.entries[next].route
+                            scene.disturb(.5f, .88f, .22f)
+                        }
+                    }
+                }
+            }) {
             AnimatedContent(targetState = tab, modifier = Modifier.fillMaxSize(),
                 transitionSpec = {
                     val enterMs = if (scene.reducedMotion) 0 else 300
@@ -244,6 +296,10 @@ fun GulpApp(active: Boolean = true) {
                         editRequest = homeEditRequest,
                         onEditRequestHandled = { homeEditRequest = 0 },
                         tiles = preferences.tiles,
+                        types = drinkTypes,
+                        onCreateDrinkType = { name, icon, amount -> scope.launch {
+                            repository.newDrinkType(name, icon, amount)
+                        } },
                         showBrandSubmark = showHomeBrandSubmark,
                         onToggleBrand = {
                             showHomeBrandSubmark = !showHomeBrandSubmark
@@ -255,7 +311,8 @@ fun GulpApp(active: Boolean = true) {
                         },
                         onLogShortcut = { tile ->
                             scope.launch {
-                                val ticket = repository.add(tile.kind, tile.amountMl)
+                                val ticket = repository.add(
+                                    DrinkTypeCatalog.resolve(tile.drinkTypeId, drinkTypes), tile.amountMl)
                                 preferencesStore.snoozeUntil(0L)
                                 scene.disturb(.5f, .56f, 1.25f)
                                 snackbars.currentSnackbarData?.dismiss()
@@ -289,6 +346,11 @@ fun GulpApp(active: Boolean = true) {
                         onAppearanceChange = { reduced, tilt, ripples, contrast ->
                             scope.launch { preferencesStore.setAppearance(reduced, tilt, ripples, contrast) }
                         },
+                        onExperienceChange = { glass, swipes, motion ->
+                            scope.launch { preferencesStore.setExperience(glass, swipes, motion) }
+                        },
+                        onManageDrinks = { showDrinkTypes = true },
+                        onWidgetPreset = { showWidgetPreset = true },
                         onExport = { exportLauncher.launch("gulp-drinks.csv") },
                         onDeleteAll = { showDeleteConfirmation = true })
                 }
@@ -319,7 +381,26 @@ fun GulpApp(active: Boolean = true) {
     )
     if (showDrinkSheet) {
         val original = recordToEdit
-        DrinkEditorSheet(existing = original, initialKind = initialKind, initialAmount = initialAmount,
+        DrinkEditorSheet(existing = original, initialKind = initialKind,
+            initialAmount = initialAmount, types = drinkTypes,
+            onCreateDrinkType = { name, icon, amount -> scope.launch {
+                repository.newDrinkType(name, icon, amount)
+            } },
+            onSaveTyped = { type, ml, timestamp ->
+                showDrinkSheet = false; recordToEdit = null
+                scope.launch {
+                    val ticket = if (original == null) {
+                        repository.add(type, ml, timestamp).also { preferencesStore.snoozeUntil(0L) }
+                    } else repository.edit(original.id, type, ml, timestamp)
+                    if (ticket != null) {
+                        scene.disturb(.5f, .56f, 1.1f)
+                        snackbars.currentSnackbarData?.dismiss()
+                        val response = snackbars.showSnackbar(ticket.message, "Undo",
+                            withDismissAction = true, duration = SnackbarDuration.Short)
+                        if (response == SnackbarResult.ActionPerformed) repository.undo(ticket)
+                    }
+                }
+            },
             onClose = { showDrinkSheet = false; recordToEdit = null },
             onSave = { kind, ml, timestamp ->
                 showDrinkSheet = false; recordToEdit = null
@@ -350,6 +431,19 @@ fun GulpApp(active: Boolean = true) {
                 }
             } })
     }
+    if (showWidgetPreset) WidgetDrinkEditor(types=drinkTypes,
+        currentId=preferences.widgetDrinkTypeId, currentAmount=preferences.widgetAmountMl,
+        onDismiss={showWidgetPreset=false},onSave={id,amount->scope.launch {
+            preferencesStore.setWidgetDrink(id,amount)
+            GulpWidgetRefresh.refresh(context)
+        }})
+    if (showDrinkTypes) DrinkTypeEditor(types = drinkTypes,
+        onDismiss = { showDrinkTypes = false },
+        onCreate = { name, icon, amount -> scope.launch {
+            repository.newDrinkType(name, icon, amount)
+        } },
+        onSave = { edited -> scope.launch { repository.saveDrinkType(edited) } },
+        onArchive = { id -> scope.launch { repository.archiveDrinkType(id) } })
     if (showWaterLab) AlertDialog(onDismissRequest = {
         showWaterLab = false
         scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))

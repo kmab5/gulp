@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -75,12 +77,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.design.GlassSurface
-import com.kmab.gulp.core.design.GlassScrollEdges
+import com.kmab.gulp.core.design.conditionalScrollBlur
+import com.kmab.gulp.core.domain.DrinkType
+import com.kmab.gulp.core.domain.DrinkTypeCatalog
+import com.kmab.gulp.core.design.DrinkIcon
 import com.kmab.gulp.core.domain.HomeTile
 import com.kmab.gulp.core.domain.HomeTileRules
 import com.kmab.gulp.core.graphics.WaterAdaptiveText
 import com.kmab.gulp.core.graphics.WaterAdaptiveSubmark
 import com.kmab.gulp.core.graphics.WaterScene
+import com.kmab.gulp.core.graphics.waterAboveClip
+import com.kmab.gulp.core.graphics.waterBelowClip
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -91,7 +98,9 @@ fun HomeScreen(
     nextReminderLabel: String, editRequest: Int, onEditRequestHandled: () -> Unit,
     tiles: List<HomeTile>, onAddDrink: () -> Unit,
     showBrandSubmark: Boolean, onToggleBrand: () -> Unit,
-    onLogShortcut: (HomeTile) -> Unit, onSaveTiles: (List<HomeTile>) -> Unit
+    onLogShortcut: (HomeTile) -> Unit, onSaveTiles: (List<HomeTile>) -> Unit,
+    types: List<DrinkType> = DrinkTypeCatalog.builtins,
+    onCreateDrinkType: (String, String, Int) -> Unit = { _, _, _ -> }
 ) {
     var editing by remember { mutableStateOf(false) }
     var draft by remember { mutableStateOf(tiles) }
@@ -113,7 +122,8 @@ fun HomeScreen(
     val gridGuideAlpha by animateFloatAsState(if (editing) .38f else 0f,
         animationSpec = tween(250), label = "edit grid guides")
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 22.dp).padding(top = 23.dp, bottom = 7.dp)) {
+    Column(Modifier.fillMaxSize().blur(if (tileToEdit != null || addTile) 5.dp else 0.dp)
+        .padding(horizontal = 22.dp).padding(top = 23.dp, bottom = 7.dp)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
@@ -126,7 +136,8 @@ fun HomeScreen(
             // Stable hit area; both representations follow the moving waterline.
             Box(Modifier.width(92.dp).height(48.dp)
                 .semantics { stateDescription = if (showBrandSubmark) "Symbol" else "Wordmark" }
-                .clickable(role = Role.Button, onClickLabel = "Switch gulp logo", onClick = onToggleBrand),
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null,
+                    role = Role.Button, onClickLabel = "Switch gulp logo", onClick = onToggleBrand),
                 contentAlignment = Alignment.CenterEnd) {
                 AnimatedContent(targetState = showBrandSubmark,
                     modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd,
@@ -143,7 +154,8 @@ fun HomeScreen(
                 }
             }
         }
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Box(Modifier.weight(1f).fillMaxWidth().conditionalScrollBlur(
+            { homeScroll.canScrollBackward }, { homeScroll.canScrollForward })) {
             Column(Modifier.fillMaxSize().verticalScroll(homeScroll).padding(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(19.dp)) {
                 GlassSurface(Modifier.fillMaxWidth().height(64.dp)
@@ -157,17 +169,17 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween) {
                     WaterAdaptiveText("Quick add", scene, viewport, fontSize = 17.sp,
                         fontWeight = FontWeight.Bold)
-                    Box(Modifier.background(if (editing) GulpPalette.Glacier else
-                            GulpPalette.Surface.copy(alpha = .59f), RoundedCornerShape(14.dp))
-                        .border(1.dp, Color.White.copy(alpha = .35f), RoundedCornerShape(14.dp))
-                        .clickable(onClickLabel = if (editing) "Save Home layout" else "Edit Home") {
+                    GlassSurface(Modifier.clickable(onClickLabel =
+                            if (editing) "Save Home layout" else "Edit Home") {
                             if (editing) onSaveTiles(draft) else draft = tiles
                             editing = !editing
-                        }.padding(horizontal = 18.dp, vertical = 11.dp)) {
+                        }, radius = 14, tint = if (editing) .45f else .31f) {
+                        Box(Modifier.padding(horizontal = 18.dp, vertical = 11.dp)) {
                         if (editing) Text("✓  Done", color = GulpPalette.Ink,
                             fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         else WaterAdaptiveText("Edit Home", scene, viewport,
                             fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
                 Box(Modifier.fillMaxWidth().height(gridHeight.dp).animateContentSize()) {
@@ -209,7 +221,7 @@ fun HomeScreen(
                 ) {
                     items(items = displayed, key = { it.id },
                         span = { tile -> GridItemSpan(if (tile.wide) 2 else 1) }) { tile ->
-                        HomeShortcutTile(tile, editing, scene, viewport,
+                        HomeShortcutTile(tile, editing, scene, viewport, types,
                             Modifier.fillMaxWidth().animateItem(
                                 placementSpec = spring(stiffness = Spring.StiffnessMediumLow),
                                 fadeInSpec = androidx.compose.animation.core.tween(180),
@@ -240,7 +252,6 @@ fun HomeScreen(
                         scene, viewport, fontSize = 12.sp)
                 }
             }
-            GlassScrollEdges(homeScroll)
         }
         Column(Modifier.fillMaxWidth().padding(top = 29.dp, bottom = 10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -255,13 +266,23 @@ fun HomeScreen(
     }
     if (tileToEdit != null || addTile) {
         val current = tileToEdit
-        TileEditorSheet(tile = current,
+        TileEditorSheet(tile = current, types = types,
+            onCreateDrinkType = onCreateDrinkType,
             onDismiss = { tileToEdit = null; addTile = false },
             onSave = { kind, ml, wide ->
                 draft = if (current == null) {
                     (draft + HomeTile(UUID.randomUUID().toString().take(8), kind, ml, wide))
                         .take(HomeTileRules.MAX_TILES)
                 } else draft.map { if (it.id == current.id) it.copy(kind = kind, amountMl = ml, wide = wide) else it }
+                onSaveTiles(draft)
+                tileToEdit = null; addTile = false
+            },
+            onSaveTyped = { type, ml, wide ->
+                draft = if (current == null) {
+                    (draft + HomeTile(UUID.randomUUID().toString().take(8),
+                        type.legacyKind, ml, wide, type.id)).take(HomeTileRules.MAX_TILES)
+                } else draft.map { if (it.id == current.id) it.copy(kind = type.legacyKind,
+                    amountMl = ml, wide = wide, drinkTypeId = type.id) else it }
                 onSaveTiles(draft)
                 tileToEdit = null; addTile = false
             },
@@ -276,7 +297,7 @@ fun HomeScreen(
 /** Live drag swaps slots during the gesture; the held item stays under the pointer. */
 @Composable
 private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene, viewport: IntSize,
-                             modifier: Modifier, bounds: MutableMap<String, Rect>,
+                             types: List<DrinkType>, modifier: Modifier, bounds: MutableMap<String, Rect>,
                              onClick: () -> Unit, onMove: (String, String) -> Unit,
                              onFinishMove: () -> Unit) {
     var dragX by remember(tile.id) { mutableFloatStateOf(0f) }
@@ -347,10 +368,18 @@ private fun HomeShortcutTile(tile: HomeTile, editing: Boolean, scene: WaterScene
             verticalArrangement = Arrangement.SpaceBetween) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            WaterAdaptiveText(tile.kind.title, scene, viewport, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            val type = DrinkTypeCatalog.resolve(tile.drinkTypeId, types)
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+                    DrinkIcon(type.iconId,Modifier.waterAboveClip(scene, viewport), GulpPalette.White)
+                    DrinkIcon(type.iconId,Modifier.waterBelowClip(scene, viewport), GulpPalette.Ink)
+                }
+                WaterAdaptiveText(type.name, scene, viewport, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
             if (editing) {
                 Box(Modifier.size(42.dp).then(dragHandler)
-                    .semantics { contentDescription = "Drag ${tile.kind.title} shortcut" },
+                    .semantics { contentDescription = "Drag ${DrinkTypeCatalog.resolve(tile.drinkTypeId, types).name} shortcut" },
                     contentAlignment = Alignment.Center) {
                     WaterAdaptiveText("⠿", scene, viewport, fontWeight = FontWeight.Bold,
                         fontSize = 27.sp, modifier = Modifier.padding(bottom = 2.dp))

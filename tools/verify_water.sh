@@ -23,7 +23,7 @@ fun main() {
   verify(WaterMath.surfaceY(.37f,.5f,0f,3f,waves,true) == WaterMath.surfaceY(.37f,.5f,0f,3f,emptyList(),true))
   for (fill in listOf(-3f,0f,.1f,.5f,1f,3f)) for (x in 0..64) {
     val y=WaterMath.surfaceY(x/64f,fill,.8f,1f,waves,true)
-    verify(y in .025f.. .98f)
+    verify(y in .015f..1.12f)
   }
   verify(WaterMath.surfaceY(.8f,.4f,.8f,1f,waves,false) == WaterMath.surfaceY(.2f,.4f,-.8f,1f,emptyList(),false))
   println("PASS: $count pure Kotlin water-geometry assertions")

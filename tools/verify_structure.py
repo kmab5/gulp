@@ -43,7 +43,7 @@ require(not (pkg / 'core/graphics/StaticWaterBackdrop.kt').exists(), 'Old water 
 require('WaterBackdrop(scene)' in (pkg/'MainActivity.kt').read_text(), 'Liquid renderer not connected')
 require('waterTouchFeedback(scene,' in (pkg/'MainActivity.kt').read_text() or 'waterTouchFeedback(scene)' in (pkg/'MainActivity.kt').read_text(), 'Touch water feedback not connected')
 require('WaterTiltSensor(scene, active,' in (pkg/'MainActivity.kt').read_text() or 'WaterTiltSensor(scene, active)' in (pkg/'MainActivity.kt').read_text(), 'Sensor lifecycle not connected')
-require('NavGlyph(' in (pkg/'core/navigation/GulpNav.kt').read_text() and 'Color.White' in (pkg/'core/navigation/GulpNav.kt').read_text(), 'Crisp white navigation glyph missing')
+require('NavGlyph(' in (pkg/'core/navigation/GulpNav.kt').read_text() and 'Text(tab.label' in (pkg/'core/navigation/GulpNav.kt').read_text(), 'Navigation labels missing')
 require((root/'tools/verify_water.sh').is_file(), 'Water verification script missing')
 # Guard against accidental publication of the retired name in live Android/Kotlin resources.
 for path in [*pkg.rglob('*.kt'), *(root/'app/src/main/res').rglob('*.xml')]:

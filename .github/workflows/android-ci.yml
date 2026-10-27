@@ -39,6 +39,9 @@ jobs:
           python3 tools/verify_ui_refresh.py
           python3 tools/verify_ui_review_02.py
           python3 tools/verify_glass_ui.py
+          python3 tools/verify_drink_types.py
+          python3 tools/verify_general_round.py
+          bash tools/verify_round08.sh
       - name: Compile, test, lint and package
         run: |
           gradle --version

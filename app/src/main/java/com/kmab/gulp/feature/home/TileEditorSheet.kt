@@ -28,6 +28,12 @@ import com.kmab.gulp.core.design.GulpChoiceChip
 import com.kmab.gulp.core.design.GulpToggleRow
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.domain.DrinkKind
+import com.kmab.gulp.core.domain.DrinkType
+import com.kmab.gulp.core.domain.DrinkTypeCatalog
+import com.kmab.gulp.core.design.DrinkTypePicker
+import com.kmab.gulp.core.design.NewDrinkTypeDialog
+import com.kmab.gulp.core.design.GlassSurface
+import androidx.compose.foundation.layout.Box
 import com.kmab.gulp.core.domain.DrinkRules
 import com.kmab.gulp.core.domain.HomeTile
 
@@ -36,22 +42,29 @@ import com.kmab.gulp.core.domain.HomeTile
 fun TileEditorSheet(
     tile: HomeTile?, onDismiss: () -> Unit,
     onSave: (DrinkKind, Int, Boolean) -> Unit,
-    onRemove: (() -> Unit)? = null
+    onRemove: (() -> Unit)? = null,
+    types: List<DrinkType> = DrinkTypeCatalog.builtins,
+    onSaveTyped: ((DrinkType, Int, Boolean) -> Unit)? = null,
+    onCreateDrinkType: ((String, String, Int) -> Unit)? = null
 ) {
-    var kind by remember(tile?.id) { mutableStateOf(tile?.kind ?: DrinkKind.WATER) }
+    var typeId by remember(tile?.id) { mutableStateOf(tile?.drinkTypeId ?: "water") }
+    var creatingType by remember { mutableStateOf(false) }
+    val chosen = DrinkTypeCatalog.resolve(typeId, types)
     var amount by remember(tile?.id) { mutableStateOf((tile?.amountMl ?: 250).toString()) }
     var wide by remember(tile?.id) { mutableStateOf(tile?.wide ?: false) }
     val ml = amount.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = androidx.compose.ui.graphics.Color(0xEE102F46),
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         contentColor = GulpPalette.White) {
+        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .32f) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 36.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (tile == null) "New shortcut" else "Edit shortcut", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                DrinkKind.entries.forEach { option ->
-                    GulpChoiceChip(label = option.title, selected = kind == option,
-                        onClick = { kind = option })
+            DrinkTypePicker(types, typeId, onSelect = { typeId = it.id })
+            if (onCreateDrinkType != null) {
+                TextButton(onClick = { creatingType = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (typeId == "other") "+ Name and save a new drink type" else "+ Create a drink type",
+                        color = GulpPalette.Glacier)
                 }
             }
             OutlinedTextField(value = amount, onValueChange = { value ->
@@ -62,12 +75,18 @@ fun TileEditorSheet(
                 modifier = Modifier.fillMaxWidth())
             GulpToggleRow("Wide tile", "Make this shortcut span two columns",
                 checked = wide, onCheckedChange = { wide = it })
-            Button(onClick = { ml?.let { onSave(kind, it, wide) } }, enabled = ml != null,
+            Button(onClick = { ml?.let {
+                if (onSaveTyped != null) onSaveTyped(chosen, it, wide)
+                else onSave(chosen.legacyKind, it, wide)
+            } }, enabled = ml != null,
                 colors = ButtonDefaults.buttonColors(containerColor = GulpPalette.Glacier, contentColor = GulpPalette.Ink),
                 modifier = Modifier.fillMaxWidth()) { Text("Save shortcut", fontWeight = FontWeight.Bold) }
             if (onRemove != null) TextButton(onClick = onRemove, modifier = Modifier.fillMaxWidth()) {
                 Text("Remove shortcut", color = GulpPalette.SoftWhite)
             }
         }
+        }
     }
+    if (creatingType && onCreateDrinkType != null) NewDrinkTypeDialog(
+        onDismiss = { creatingType = false }, onCreate = onCreateDrinkType)
 }

@@ -33,6 +33,11 @@ import androidx.compose.ui.unit.sp
 import com.kmab.gulp.core.design.GulpChoiceChip
 import com.kmab.gulp.core.design.GulpPalette
 import com.kmab.gulp.core.domain.DrinkKind
+import com.kmab.gulp.core.domain.DrinkType
+import com.kmab.gulp.core.domain.DrinkTypeCatalog
+import com.kmab.gulp.core.design.DrinkTypePicker
+import com.kmab.gulp.core.design.NewDrinkTypeDialog
+import com.kmab.gulp.core.design.GlassSurface
 import com.kmab.gulp.core.domain.DrinkRecord
 import com.kmab.gulp.core.domain.DrinkRules
 import java.time.Instant
@@ -49,11 +54,18 @@ fun DrinkEditorSheet(
     initialAmount: Int,
     onClose: () -> Unit,
     onSave: (DrinkKind, Int, Long) -> Unit,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    types: List<DrinkType> = DrinkTypeCatalog.builtins,
+    onSaveTyped: ((DrinkType, Int, Long) -> Unit)? = null,
+    onCreateDrinkType: ((String, String, Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
+    var creatingType by remember { mutableStateOf(false) }
     val zone = remember { ZoneId.systemDefault() }
-    var type by remember(existing?.id) { mutableStateOf(existing?.kind ?: initialKind) }
+    var selectedTypeId by remember(existing?.id) {
+        mutableStateOf(existing?.drinkTypeId ?: initialKind.name.lowercase())
+    }
+    val selectedType = DrinkTypeCatalog.resolve(selectedTypeId, types)
     var text by remember(existing?.id) { mutableStateOf((existing?.amountMl ?: initialAmount).toString()) }
     var localTime by remember(existing?.id) {
         mutableStateOf(LocalDateTime.ofInstant(Instant.ofEpochMilli(existing?.timeMillis ?: System.currentTimeMillis()), zone))
@@ -61,16 +73,18 @@ fun DrinkEditorSheet(
     val parsed = text.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onClose, sheetState = sheetState,
-        containerColor = androidx.compose.ui.graphics.Color(0xEE102F46),
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         contentColor = GulpPalette.White) {
+        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .32f) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 38.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (existing == null) "Add a drink" else "Edit drink", fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                DrinkKind.entries.forEach { kind ->
-                    GulpChoiceChip(label = kind.title, selected = type == kind,
-                        onClick = { type = kind })
-                }
+            DrinkTypePicker(types, selectedTypeId,
+                onSelect = { selectedTypeId = it.id })
+            if (onCreateDrinkType != null) TextButton(onClick = { creatingType = true },
+                modifier = Modifier.fillMaxWidth()) {
+                Text(if (selectedTypeId == "other") "+ Name and save a new drink type"
+                    else "+ Create a drink type", color = GulpPalette.Glacier)
             }
             OutlinedTextField(value = text, onValueChange = { value ->
                 if (value.length <= 5 && value.all { it.isDigit() }) text = value
@@ -80,20 +94,30 @@ fun DrinkEditorSheet(
                 supportingText = { Text("Recorded volume, not a recommended amount") },
                 modifier = Modifier.fillMaxWidth())
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                GlassSurface(Modifier.weight(1f), radius = 15, tint = .30f) {
                 TextButton(onClick = {
                     DatePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, year, month, day ->
                         localTime = java.time.LocalDate.of(year, month + 1, day).atTime(localTime.toLocalTime())
                     }, localTime.year, localTime.monthValue - 1, localTime.dayOfMonth).show()
-                }) { Text(localTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))) }
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("▦  " + localTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy")))
+                }
+                }
+                GlassSurface(Modifier.weight(1f), radius = 15, tint = .30f) {
                 TextButton(onClick = {
                     TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, hour, minute ->
                         localTime = localTime.withHour(hour).withMinute(minute)
                     }, localTime.hour, localTime.minute, true).show()
-                }) { Text(localTime.format(DateTimeFormatter.ofPattern("HH:mm"))) }
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("◷  " + localTime.format(DateTimeFormatter.ofPattern("HH:mm")))
+                }
+                }
             }
             Button(onClick = {
                 val ml = parsed ?: return@Button
-                onSave(type, ml, localTime.atZone(zone).toInstant().toEpochMilli())
+                val timestamp = localTime.atZone(zone).toInstant().toEpochMilli()
+                if (onSaveTyped != null) onSaveTyped(selectedType, ml, timestamp)
+                else onSave(selectedType.legacyKind, ml, timestamp)
             }, enabled = parsed != null, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = GulpPalette.Glacier, contentColor = GulpPalette.Ink)) {
                 Text(if (existing == null) "Add drink" else "Save changes", fontWeight = FontWeight.Bold)
@@ -104,5 +128,8 @@ fun DrinkEditorSheet(
                 }
             }
         }
+        }
     }
+    if (creatingType && onCreateDrinkType != null) NewDrinkTypeDialog(
+        onDismiss = { creatingType = false }, onCreate = onCreateDrinkType)
 }

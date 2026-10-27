@@ -25,8 +25,19 @@ object OnConflictStrategy { const val REPLACE = 1 }
 abstract class RoomDatabase
 object Room {
   fun <T: RoomDatabase> databaseBuilder(context: Context, klass: Class<T>, name: String): Builder<T> = Builder()
-  class Builder<T: RoomDatabase> { fun build(): T = error("stub") }
+  class Builder<T: RoomDatabase> { fun addMigrations(vararg migrations: androidx.room.migration.Migration): Builder<T> = this; fun build(): T = error("stub") }
 }
+KT
+cat > "$DIR/stubs/Migration.kt" <<'KT'
+package androidx.room.migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+abstract class Migration(val startVersion: Int, val endVersion: Int) {
+    abstract fun migrate(db: SupportSQLiteDatabase)
+}
+KT
+cat > "$DIR/stubs/SQLite.kt" <<'KT'
+package androidx.sqlite.db
+interface SupportSQLiteDatabase { fun execSQL(statement: String) }
 KT
 cat > "$DIR/stubs/Context.kt" <<'KT'
 package android.content
@@ -82,7 +93,7 @@ fun main() = runBlocking {
     val last = repo.add(DrinkKind.TEA, 225)
     check(repo.undo(last))
     check(repo.records.first().size == 1)
-    check(repo.exportCsv().lines()[0] == "id,timestamp_utc,drink_type,amount_ml")
+    check(repo.exportCsv().lines()[0] == DrinkCsv.HEADER)
     check(repo.deleteAll() == 1)
     check(repo.records.first().isEmpty())
     check(repo.deleteAll() == 0)
@@ -98,8 +109,9 @@ package com.kmab.gulp.widget
 import android.content.Context
 object GulpWidgetRefresh { suspend fun refresh(context: Context) {} }
 KT
-kotlinc "$DIR/stubs/Room.kt" "$DIR/stubs/Context.kt" "$DIR/stubs/Log.kt" "$DIR/stubs/Widget.kt" "$DIR/stubs/RepoCheck.kt" \
+kotlinc "$DIR/stubs/Room.kt" "$DIR/stubs/Migration.kt" "$DIR/stubs/SQLite.kt" "$DIR/stubs/Context.kt" "$DIR/stubs/Log.kt" "$DIR/stubs/Widget.kt" "$DIR/stubs/RepoCheck.kt" \
     app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkType.kt \
     app/src/main/java/com/kmab/gulp/core/domain/DrinkCsv.kt \
     app/src/main/java/com/kmab/gulp/core/data/GulpDatabase.kt \
     app/src/main/java/com/kmab/gulp/core/data/GulpRepository.kt \

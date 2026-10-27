@@ -10,9 +10,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.kmab.gulp.core.design.GlassScrollableColumn
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.kmab.gulp.core.design.GlassSurface
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
+import com.kmab.gulp.core.design.GulpWaterText as Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -44,6 +52,8 @@ fun RemindersScreen(
 ) {
     val context = LocalContext.current
     val plan = preferences.reminders
+    var customInterval by remember { mutableStateOf(plan.intervalMinutes.toString()) }
+    val enteredInterval = customInterval.toIntOrNull()?.takeIf { it in 30..360 }
     val next = ReminderRules.nextAlarm(nowMillis, ZoneId.systemDefault(), plan)
     GlassScrollableColumn(Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 31.dp),
         verticalArrangement = Arrangement.spacedBy(17.dp)) {
@@ -89,6 +99,21 @@ fun RemindersScreen(
                         }
                     }
                 }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(value = customInterval, onValueChange = { input ->
+                        if (input.length <= 3 && input.all(Char::isDigit)) customInterval = input
+                    }, modifier = Modifier.weight(1f), label = { Text("Custom minutes") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        isError = customInterval.isNotEmpty() && enteredInterval == null,
+                        supportingText = { Text("30–360 minutes") })
+                    Button(enabled = enteredInterval != null, onClick = {
+                        enteredInterval?.let { onPlanChange(plan.copy(intervalMinutes = it,
+                            snoozeUntilMillis = 0)) }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = GulpPalette.Glacier,
+                        contentColor = GulpPalette.Ink)) { Text("Set") }
+                }
                 Note("Choose what feels comfortable. There's no proven optimal drinking interval.")
             }
         }
@@ -97,18 +122,26 @@ fun RemindersScreen(
                 Text("Quiet hours", color = GulpPalette.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Note("You won't get drink notifications outside these hours.")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    GlassSurface(Modifier.weight(1f), radius = 16, tint = .29f) {
                     TextButton(onClick = {
                         TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, h, m ->
                             val changed = plan.copy(awakeStartMinute = h * 60 + m, snoozeUntilMillis = 0)
                             if (changed.valid()) onPlanChange(changed)
                         }, plan.awakeStartMinute / 60, plan.awakeStartMinute % 60, true).show()
-                    }) { Text("From ${ReminderRules.formatMinute(plan.awakeStartMinute)}") }
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("☀  Wake  ${ReminderRules.formatMinute(plan.awakeStartMinute)}")
+                    }
+                    }
+                    GlassSurface(Modifier.weight(1f), radius = 16, tint = .29f) {
                     TextButton(onClick = {
                         TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, h, m ->
                             val changed = plan.copy(awakeEndMinute = h * 60 + m, snoozeUntilMillis = 0)
                             if (changed.valid()) onPlanChange(changed)
                         }, plan.awakeEndMinute / 60, plan.awakeEndMinute % 60, true).show()
-                    }) { Text("Until ${ReminderRules.formatMinute(plan.awakeEndMinute)}") }
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("☾  Sleep  ${ReminderRules.formatMinute(plan.awakeEndMinute)}")
+                    }
+                    }
                 }
                 Note("Choose a wake and sleep time at least one hour apart.")
             }

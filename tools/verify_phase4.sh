@@ -53,6 +53,7 @@ fun main() {
 }
 KT
 kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkType.kt \
   app/src/main/java/com/kmab/gulp/core/domain/ReminderRules.kt \
   app/src/main/java/com/kmab/gulp/core/domain/ReviewRules.kt \
   app/src/main/java/com/kmab/gulp/core/domain/TrackingReference.kt \

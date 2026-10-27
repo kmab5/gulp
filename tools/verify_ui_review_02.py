@@ -24,10 +24,10 @@ has('app/src/main/java/com/kmab/gulp/core/design/GulpComponents.kt',
 has('app/src/main/java/com/kmab/gulp/feature/home/HomeScreen.kt',
     'Visible bento slots stay fixed', 'val gridGuideAlpha',
     'SystemClock.uptimeMillis()', 'lastSwapTime >= 85L',
-    'GlassScrollEdges(homeScroll)', 'animateItem(')
+    'conditionalScrollBlur', 'animateItem(')
 has('app/src/main/java/com/kmab/gulp/core/navigation/GulpNav.kt',
     'fontSize = 11.5.sp', 'delay(1650)', 'NavGlyph(')
-has('app/build.gradle.kts', 'versionCode = 11', 'versionName = "0.6.5-rc6"')
+has('app/build.gradle.kts', 'versionCode = 13', 'versionName = "0.6.7-rc8"')
 has('docs/DESIGN_CONTRACT.md', 'UI_FEEDBACK_AUDIT.md')
 has('docs/UI_FEEDBACK_AUDIT.md', 'True backdrop blur', 'Medical fluid plan')
 # No old package remnants or retired renderer should creep back into any source root.

@@ -15,12 +15,13 @@ fun main() {
         ok(csv.lines().size == n+2)
         ok(csv.startsWith(DrinkCsv.HEADER + "\n"))
         ok(csv.lines()[1].startsWith("${records.first().id},"))
-        ok(csv.split('\n').drop(1).filter { it.isNotBlank() }.all { it.split(',').size == 4 })
+        ok(csv.split('\n').drop(1).filter { it.isNotBlank() }.all { it.split(',').size == 7 })
     }
     println("PASS: $checks offline CSV structure, UTC order, bounded rows")
 }
 KT
 kotlinc app/src/main/java/com/kmab/gulp/core/domain/DrinkModels.kt \
+    app/src/main/java/com/kmab/gulp/core/domain/DrinkType.kt \
     app/src/main/java/com/kmab/gulp/core/domain/DrinkCsv.kt \
     "$DIR/Test.kt" -include-runtime -d "$DIR/check.jar"
 java -jar "$DIR/check.jar"

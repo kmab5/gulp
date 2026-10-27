@@ -17,7 +17,11 @@ data class DrinkRecord(
     val id: Long = 0L,
     val amountMl: Int,
     val kind: DrinkKind,
-    val timeMillis: Long
+    val timeMillis: Long,
+    /** Immutable snapshot: editing or archiving a drink type never rewrites history. */
+    val drinkTypeId: String = kind.name.lowercase(),
+    val drinkName: String = kind.title,
+    val drinkIcon: String = DrinkTypeCatalog.defaultIcon(kind)
 )
 
 object DrinkRules {
@@ -48,7 +52,8 @@ data class HomeTile(
     val id: String,
     val kind: DrinkKind,
     val amountMl: Int,
-    val wide: Boolean = false
+    val wide: Boolean = false,
+    val drinkTypeId: String = kind.name.lowercase()
 )
 
 object HomeTileRules {
@@ -69,7 +74,7 @@ object HomeTileRules {
 
     /** Only internal identifiers are serialized; the user cannot inject delimiters. */
     fun encode(tiles: List<HomeTile>): String = tiles.joinToString(";") {
-        "${it.id},${it.kind.name},${it.amountMl},${if (it.wide) 1 else 0}"
+        "${it.id},${it.kind.name},${it.amountMl},${if (it.wide) 1 else 0},${it.drinkTypeId}"
     }
 
     fun decode(value: String?): List<HomeTile> {
@@ -77,13 +82,15 @@ object HomeTileRules {
         if (value.isBlank()) return defaults
         val result = value.split(';').mapNotNull { token ->
             val parts = token.split(',')
-            if (parts.size != 4) return@mapNotNull null
+            if (parts.size != 4 && parts.size != 5) return@mapNotNull null
             val id = parts[0].takeIf { it.length in 1..40 && it.all { c -> c.isLetterOrDigit() || c == '-' } }
                 ?: return@mapNotNull null
             val kind = DrinkKind.entries.firstOrNull { it.name == parts[1] } ?: return@mapNotNull null
             val ml = parts[2].toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
                 ?: return@mapNotNull null
-            HomeTile(id, kind, ml, parts[3] == "1")
+            val typeId = parts.getOrNull(4)?.takeIf { DrinkTypeCatalog.validId(it) }
+                ?: kind.name.lowercase()
+            HomeTile(id, kind, ml, parts[3] == "1", typeId)
         }.distinctBy { it.id }.take(MAX_TILES)
         return result.ifEmpty { defaults }
     }

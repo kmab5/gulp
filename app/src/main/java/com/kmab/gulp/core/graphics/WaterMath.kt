@@ -8,7 +8,7 @@ import kotlin.math.sin
 
 /** Pure, allocation-free geometry shared by the background renderer and ink clipping. */
 object WaterMath {
-    const val MIN_VISUAL_FILL = 0.25f // decorative nav reserve, not a recorded drink
+    const val MIN_VISUAL_FILL = 0f // an empty log can leave even the navbar above the water
     private const val TAU = (2.0 * PI).toFloat()
 
     fun visibleFill(requested: Float): Float = requested.coerceIn(MIN_VISUAL_FILL, 0.96f)
@@ -16,9 +16,9 @@ object WaterMath {
     /** X/Y values are normalized to the full viewport, not a particular text widget. */
     fun surfaceY(x: Float, fill: Float, tilt: Float, seconds: Float, waves: List<WaterImpulse>, animate: Boolean): Float {
         val nx = x.coerceIn(0f, 1f)
-        val baseline = 1f - visibleFill(fill)
+        val baseline = if (fill <= 0.001f) 1.08f else 1f - visibleFill(fill)
         if (!animate) return baseline
-        val lean = (nx - 0.5f) * tilt.coerceIn(-1f, 1f) * 0.32f
+        val lean = (nx - 0.5f) * tilt.coerceIn(-1f, 1f) * 0.40f
         val idle = sin(nx * TAU * 1.65f - seconds * 1.25f) * 0.0035f +
             sin(nx * TAU * 2.55f + seconds * 0.78f) * 0.0017f
         var impulseOffset = 0f
@@ -32,7 +32,7 @@ object WaterMath {
             impulseOffset += sin(frequency) * envelope * exp((-age * 1.7f).toDouble()).toFloat() * wave.power * 0.019f
         }
         // Keep even strong disturbances inside the display; physically simulated, visually bounded.
-        return (baseline + lean + idle + impulseOffset).coerceIn(0.025f, 0.98f)
+        return (baseline + lean + idle + impulseOffset).coerceIn(0.015f, 1.12f)
     }
 
     fun easingStep(current: Float, target: Float, dt: Float, response: Float): Float {

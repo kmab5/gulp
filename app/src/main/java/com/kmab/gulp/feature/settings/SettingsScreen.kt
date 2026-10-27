@@ -9,8 +9,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.kmab.gulp.core.design.GlassScrollableColumn
-import androidx.compose.material3.Text
+import com.kmab.gulp.core.design.GulpWaterText as Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import kotlin.math.roundToInt
+import com.kmab.gulp.core.design.GulpChoiceRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -39,9 +49,23 @@ fun SettingsScreen(
     onCustomizeHome: () -> Unit, onWaterLab: () -> Unit,
     onReminders: () -> Unit,
     onAppearanceChange: (Boolean, Boolean, Boolean, Boolean) -> Unit,
-    onExport: () -> Unit, onDeleteAll: () -> Unit
+    onExperienceChange: (Boolean, Boolean, Int) -> Unit,
+    onExport: () -> Unit, onDeleteAll: () -> Unit,
+    onManageDrinks: () -> Unit = {},
+    onWidgetPreset: () -> Unit = {}
 ) {
     val visualCapacityMl = preferences.visualCapacityMl
+    var displayDraft by remember(visualCapacityMl) { mutableStateOf(visualCapacityMl.toFloat()) }
+    var customReferenceSelected by remember(preferences.trackingReferenceMl) {
+        mutableStateOf(preferences.trackingReferenceMl !in TrackingReference.selectable)
+    }
+    var customReference by remember(preferences.trackingReferenceMl) {
+        mutableStateOf(preferences.trackingReferenceMl.coerceAtLeast(500).toString())
+    }
+    val validReference = customReference.toIntOrNull()?.takeIf { it in 250..6000 }
+    var motionDraft by remember(preferences.motionStrengthPct) {
+        mutableStateOf(preferences.motionStrengthPct.toFloat())
+    }
     val context = LocalContext.current
     val version = remember(context) {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
@@ -65,16 +89,23 @@ fun SettingsScreen(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Home", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = GulpPalette.White)
                 PreferenceRow("Customize shortcuts", "Move, resize and edit your quick-add tiles", onCustomizeHome)
+                PreferenceRow("My drinks", "Create drinks, choose icons and set default amounts", onManageDrinks)
+                PreferenceRow("Widget quick add", "Choose your widget drink and amount", onWidgetPreset)
                 Text("Water display scale", fontSize = 14.sp, color = GulpPalette.White, fontWeight = FontWeight.Medium)
                 Note("Only affects the illustration. This isn't a drinking recommendation.")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { onVisualCapacityChange((visualCapacityMl - 250).coerceAtLeast(250)) },
-                        enabled = visualCapacityMl > 250) { Text("− 250", color = GulpPalette.Glacier) }
-                    Text("$visualCapacityMl mL", color = GulpPalette.Glacier, fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 13.dp))
-                    TextButton(onClick = { onVisualCapacityChange((visualCapacityMl + 250).coerceAtMost(6000)) },
-                        enabled = visualCapacityMl < 6000) { Text("+ 250", color = GulpPalette.Glacier) }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("250 mL", fontSize = 12.sp, color = GulpPalette.SoftWhite)
+                    Text("${displayDraft.roundToInt()} mL", fontSize = 19.sp,
+                        color = GulpPalette.Glacier, fontWeight = FontWeight.Bold)
+                    Text("6,000 mL", fontSize = 12.sp, color = GulpPalette.SoftWhite)
                 }
+                Slider(value = displayDraft, onValueChange = {
+                    displayDraft = (it / 50f).roundToInt() * 50f
+                }, onValueChangeFinished = {
+                    onVisualCapacityChange(displayDraft.roundToInt().coerceIn(250, 6000))
+                }, valueRange = 250f..6000f, modifier = Modifier.fillMaxWidth())
+                Note("Changes the illustration only, in 50 mL steps. Not a drinking target.")
             }
         }
         FrostPanel(Modifier.fillMaxWidth()) {
@@ -87,22 +118,32 @@ fun SettingsScreen(
                 if (preferences.clinicianManagedFluids) {
                     Note("Follow your clinician's fluid guidance. Generic goals and drinking reminders are disabled until you switch this off.")
                 } else {
-                    listOf(0,1500,1875,2000,2500).forEach { amount ->
-                        TextButton(onClick = { onTrackingChange(amount, false) }, modifier = Modifier.fillMaxWidth()) {
-                            Text((if (preferences.trackingReferenceMl == amount) "✓ " else "") +
-                                (if (amount == 0) "No tracking reference" else "$amount mL recorded drinks"),
-                                color = GulpPalette.Glacier)
+                    TrackingReference.selectable.forEach { amount ->
+                        GulpChoiceRow(if (amount == 0) "No reference" else "$amount mL",
+                            supporting = when (amount) {
+                                0 -> "Just record drinks without a target"
+                                1500, 1875 -> "Illustrative beverage share of an EFSA reference"
+                                else -> "Your chosen amount for comparison"
+                            }, selected = !customReferenceSelected && preferences.trackingReferenceMl == amount,
+                            onClick = { customReferenceSelected = false; onTrackingChange(amount, false) })
+                    }
+                    GulpChoiceRow("Custom amount", "Enter any number from 250 to 6,000 mL",
+                        selected = customReferenceSelected,
+                        onClick = { customReferenceSelected = true })
+                    if (customReferenceSelected) {
+                        OutlinedTextField(value = customReference, onValueChange = { input ->
+                            if (input.length <= 5 && input.all(Char::isDigit)) customReference = input
+                        }, label = { Text("Amount (mL)") }, singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            isError = customReference.isNotBlank() && validReference == null,
+                            modifier = Modifier.fillMaxWidth())
+                        TextButton(enabled = validReference != null, onClick = {
+                            validReference?.let { onTrackingChange(it, false) }
+                        }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Use custom amount", color = GulpPalette.Glacier, fontWeight = FontWeight.Bold)
                         }
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = {
-                            onTrackingChange((preferences.trackingReferenceMl.coerceAtLeast(500) - 250).coerceAtLeast(250), false)
-                        }) { Text("− 250 mL") }
-                        TextButton(onClick = {
-                            onTrackingChange((preferences.trackingReferenceMl + 250).coerceIn(250, 6000), false)
-                        }) { Text("+ 250 mL") }
-                    }
-                    Note("You can adjust the comparison in 250 mL steps. 1,500 and 1,875 mL are illustrative beverage shares of EFSA adult total-water references, not medical targets.")
+                    Note("Food contributes water too. These are optional recorded-beverage comparisons, not medical targets.")
                 }
             }
         }
@@ -129,6 +170,22 @@ fun SettingsScreen(
                 AppearanceToggle("Stronger text contrast", "High-contrast text above and below the water", preferences.strongerContrast) {
                     onAppearanceChange(preferences.reduceMotion, preferences.tiltEnabled, preferences.touchRipplesEnabled, it)
                 }
+                AppearanceToggle("Glass blur", "Frosted surfaces over the moving water",
+                    preferences.glassBlurEnabled) {
+                    onExperienceChange(it, preferences.swipeTabsEnabled, preferences.motionStrengthPct)
+                }
+                AppearanceToggle("Swipe between tabs", "Switch tabs by swiping left or right",
+                    preferences.swipeTabsEnabled) {
+                    onExperienceChange(preferences.glassBlurEnabled, it, preferences.motionStrengthPct)
+                }
+                Text("Water motion intensity", color = GulpPalette.White, fontWeight = FontWeight.Medium)
+                Text("${motionDraft.roundToInt()}%", color = GulpPalette.Glacier)
+                Slider(value = motionDraft, onValueChange = { motionDraft = (it / 5f).roundToInt() * 5f },
+                    onValueChangeFinished = {
+                        onExperienceChange(preferences.glassBlurEnabled, preferences.swipeTabsEnabled,
+                            motionDraft.roundToInt().coerceIn(25, 150))
+                    }, valueRange = 25f..150f)
+                Note("Set to 100% for the original feel. Reduce motion overrides this control.")
             }
         }
         FrostPanel(Modifier.fillMaxWidth(), padding = 17.dp) {

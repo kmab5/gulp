@@ -35,6 +35,8 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.kmab.gulp.core.data.GulpRepository
+import com.kmab.gulp.core.data.GulpPreferencesStore
+import com.kmab.gulp.core.domain.DrinkTypeCatalog
 import com.kmab.gulp.core.domain.DrinkKind
 import com.kmab.gulp.core.domain.DrinkRules
 import java.time.LocalDate
@@ -61,14 +63,20 @@ private suspend fun todayTotal(context: Context): Int {
 class GulpQuickWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val total = todayTotal(context)
-        provideContent { QuickContent(total) }
+        val selection = GulpPreferencesStore(context).snapshot()
+        val chosen = DrinkTypeCatalog.resolve(selection.widgetDrinkTypeId,
+            GulpRepository.create(context).drinkTypes.first())
+        provideContent { QuickContent(total, chosen.name, selection.widgetAmountMl) }
     }
 }
 
 class GulpSummaryWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val total = todayTotal(context)
-        provideContent { SummaryContent(total) }
+        val selection = GulpPreferencesStore(context).snapshot()
+        val chosen = DrinkTypeCatalog.resolve(selection.widgetDrinkTypeId,
+            GulpRepository.create(context).drinkTypes.first())
+        provideContent { SummaryContent(total, chosen.name, selection.widgetAmountMl) }
     }
 }
 
@@ -86,7 +94,7 @@ private fun Brand() {
 }
 
 @Composable
-private fun QuickContent(total: Int) {
+private fun QuickContent(total: Int, drinkName: String, amount: Int) {
     Column(modifier = GlanceModifier.fillMaxSize().background(dark).cornerRadius(22.dp).padding(14.dp)) {
         Brand()
         Spacer(GlanceModifier.height(5.dp))
@@ -94,12 +102,12 @@ private fun QuickContent(total: Int) {
         Spacer(GlanceModifier.height(6.dp))
         Box(GlanceModifier.fillMaxWidth().height(2.dp).background(aqua)) {}
         Spacer(GlanceModifier.height(9.dp))
-        WidgetAddButton(250, "+ 250 mL")
+        WidgetAddButton(amount, "+ $amount mL $drinkName")
     }
 }
 
 @Composable
-private fun SummaryContent(total: Int) {
+private fun SummaryContent(total: Int, drinkName: String, amount: Int) {
     Column(modifier = GlanceModifier.fillMaxSize().background(dark).cornerRadius(22.dp).padding(14.dp)) {
         Row(modifier = GlanceModifier.fillMaxWidth()) {
             Brand()
@@ -112,9 +120,7 @@ private fun SummaryContent(total: Int) {
         Text("Recorded drinks", style = TextStyle(color = ColorProvider(aqua), fontSize = 12.sp))
         Spacer(GlanceModifier.height(8.dp))
         Row {
-            WidgetAddButton(250, "+ 250 mL")
-            Spacer(GlanceModifier.width(8.dp))
-            WidgetAddButton(500, "+ 500 mL")
+            WidgetAddButton(amount, "+ $amount mL $drinkName")
         }
     }
 }
@@ -134,7 +140,7 @@ class GulpWidgetLogAction : ActionCallback {
 
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val amount = parameters[AMOUNT] ?: return
-        if (amount != 250 && amount != 500) return
+        if (amount !in 1..5000) return
         WidgetTapGate.record(context, amount)
         // Repository.afterWrite refreshes all placed widgets, including this instance.
     }
@@ -150,7 +156,10 @@ private object WidgetTapGate {
         if (lastAmount == amount && now - lastAt in 0 until 700L) return@withLock
         lastAmount = amount
         lastAt = now
-        GulpRepository.create(context).add(DrinkKind.WATER, amount)
+        val repo = GulpRepository.create(context)
+        val prefs = GulpPreferencesStore(context).snapshot()
+        val type = DrinkTypeCatalog.resolve(prefs.widgetDrinkTypeId, repo.drinkTypes.first())
+        repo.add(type, amount)
     }
 }
 
