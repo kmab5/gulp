@@ -3,6 +3,8 @@ package com.kmab.gulp.core.design
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,7 +35,9 @@ fun NewDrinkTypeDialog(onDismiss: () -> Unit, onCreate: (String, String, Int) ->
     AlertDialog(onDismissRequest = onDismiss, containerColor = GulpPalette.DeepBlue,
         title = { Text("New drink", color = GulpPalette.White) },
         text = {
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+            Column(Modifier.fillMaxWidth()
+                .heightIn(max = (LocalConfiguration.current.screenHeightDp * .48f).dp)
+                .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Give it a name, icon, and usual amount.", color = GulpPalette.SoftWhite)
                 OutlinedTextField(name, onValueChange = { if (it.length <= 32) name = it },

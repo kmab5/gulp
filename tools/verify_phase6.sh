@@ -74,7 +74,7 @@ assert libs['versions']['kotlin']=='2.2.21'
 assert libs['versions']['ksp']=='2.2.21-2.0.5'
 assert libs['plugins']['ksp']['version']['ref']=='ksp'
 assert (root/'gradle/wrapper/gradle-wrapper.properties').exists()
-assert '0.6.7-rc8' in (root/'app/build.gradle.kts').read_text()
+assert '0.6.8-rc9' in (root/'app/build.gradle.kts').read_text()
 main=(root/'app/src/main/java/com/kmab/gulp/MainActivity.kt').read_text()
 assert 'nextReminderLabel = nextReminderLabel' in main
 assert 'if (plan.enabled && !preferences.clinicianManagedFluids && !notificationPermission)' in main

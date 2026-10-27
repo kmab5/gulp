@@ -1,4 +1,4 @@
-# gulp v0.6.7-rc8 — screen updates
+# gulp v0.6.8-rc9 — fluid interaction and UI refinement
 
 Round 08 builds on v0.6.6-rc7. See [`docs/ROUND08_SCREEN_COMPLETION.md`](docs/ROUND08_SCREEN_COMPLETION.md) for changes, safeguards and device acceptance tests. Native Android compilation is pending.
 
@@ -108,3 +108,8 @@ Official approved identity: Fluid Nucleus / Option A. The Home header tap toggle
 ## Shared-foundations update — 0.6.6-rc7
 
 See [`docs/ROUND07_SHARED_FOUNDATIONS.md`](docs/ROUND07_SHARED_FOUNDATIONS.md) for database migration, drink catalog, shared scrolling and tab-swipe navigation, test plan and next-round scope. The local release key `build-key` and `keystore.properties` remain private and unchanged.
+
+
+## Round 9 — interactive polish
+
+The scroll edges now feather content only where additional content is clipped. Swipe navigation responds across the display with transient liquid inertia. Drink editors use constrained, scrollable dark-glass sheets. Home editing, wake/sleep, calendar controls, History active icon and flat glass materials have been refined. The icon chooser ships a broader set of local Lucide (ISC) vector assets; see `docs/third_party/LUCIDE_ICONS_ISC.md`. See `docs/ROUND09_UI_REFINEMENT.md` for testing and scope.

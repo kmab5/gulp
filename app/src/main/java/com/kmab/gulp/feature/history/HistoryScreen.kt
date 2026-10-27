@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
+import com.kmab.gulp.R
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -79,9 +83,15 @@ fun HistoryScreen(
                         TextButton(onClick = ::showCalendar, modifier = Modifier.fillMaxWidth()) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text("▦  ${selected.format(DateTimeFormatter.ofPattern("EEE, MMM d"))}",
-                                    color = GulpPalette.White, fontWeight = FontWeight.Bold,
-                                    fontSize = 17.sp, textAlign = TextAlign.Center)
+                                Row(verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                                    androidx.compose.foundation.Image(painterResource(R.drawable.ic_calendar_days),
+                                        null, Modifier.size(23.dp),
+                                        colorFilter = ColorFilter.tint(GulpPalette.White))
+                                    Text(selected.format(DateTimeFormatter.ofPattern("EEE, MMM d")),
+                                        color = GulpPalette.White, fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp, textAlign = TextAlign.Center)
+                                }
                                 Text(if (selected == today) "Today · tap to change" else "Tap to choose a date",
                                     color = GulpPalette.SoftWhite, fontSize = 11.sp)
                             }

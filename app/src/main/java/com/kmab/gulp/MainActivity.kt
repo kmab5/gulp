@@ -25,7 +25,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.geometry.Offset
 import kotlin.math.abs
 import androidx.compose.foundation.layout.Arrangement
@@ -89,6 +88,7 @@ import com.kmab.gulp.core.graphics.waterTouchFeedback
 import com.kmab.gulp.core.reminders.GulpReminderScheduler
 import com.kmab.gulp.core.navigation.GulpNav
 import com.kmab.gulp.core.navigation.GulpTab
+import com.kmab.gulp.core.navigation.GulpSwipe
 import com.kmab.gulp.feature.history.HistoryScreen
 import com.kmab.gulp.feature.onboarding.OnboardingScreen
 import com.kmab.gulp.feature.home.DrinkEditorSheet
@@ -250,39 +250,43 @@ fun GulpApp(active: Boolean = true) {
         LocalGlassScene provides scene, LocalGlassViewport provides viewport,
         LocalGlassEnabled provides preferences.glassBlurEnabled) {
     Box(Modifier.fillMaxSize().blur(if (showDrinkSheet) 5.dp else 0.dp)
-        .onSizeChanged { viewport = it }.waterTouchFeedback(scene, preferences.touchRipplesEnabled)) {
-        WaterBackdrop(scene)
-        Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)
-            .pointerInput(tabRoute, preferences.swipeTabsEnabled) {
-                if (preferences.swipeTabsEnabled) awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    var horizontal = 0f
-                    var vertical = 0f
-                    var childConsumed = false
-                    var pressed = true
-                    while (pressed) {
-                        val event = awaitPointerEvent(PointerEventPass.Final)
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (change.isConsumed) childConsumed = true
-                        if (!childConsumed) {
-                            val delta = change.positionChange()
-                            horizontal += delta.x
-                            vertical += delta.y
-                        }
-                        pressed = change.pressed
+        .onSizeChanged { viewport = it }
+        .waterTouchFeedback(scene, preferences.touchRipplesEnabled)
+        .pointerInput(preferences.swipeTabsEnabled, tabRoute) {
+            if (preferences.swipeTabsEnabled) awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                var totalX = 0f
+                var totalY = 0f
+                var pushed = false
+                var last = down.position
+                var y = down.position.y / size.height.coerceAtLeast(1)
+                while (true) {
+                    // Initial pass sees movement anywhere on the page before buttons,
+                    // cards and vertical scrolling have an opportunity to consume it.
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val pointer = event.changes.firstOrNull { it.id == down.id } ?: break
+                    val delta = pointer.position - last
+                    last = pointer.position
+                    totalX += delta.x
+                    totalY += delta.y
+                    y = pointer.position.y / size.height.coerceAtLeast(1)
+                    if (!pushed && abs(totalX) > 40.dp.toPx() &&
+                        abs(totalX) > abs(totalY) * 1.5f) {
+                        scene.pushFromSwipe(totalX, y.coerceIn(0f, 1f))
+                        pushed = true
                     }
-                    val threshold = 95.dp.toPx()
-                    if (!childConsumed && abs(horizontal) > threshold &&
-                        abs(horizontal) > abs(vertical) * 1.5f) {
-                        val next = (tab.ordinal + if (horizontal < 0f) 1 else -1)
-                            .coerceIn(0, GulpTab.entries.lastIndex)
-                        if (next != tab.ordinal) {
-                            tabRoute = GulpTab.entries[next].route
-                            scene.disturb(.5f, .88f, .22f)
-                        }
-                    }
+                    if (!pointer.pressed) break
                 }
-            }) {
+                val next = GulpSwipe.nextIndex(GulpTab.fromRoute(tabRoute).ordinal,
+                    totalX, totalY, 84.dp.toPx(), GulpTab.entries.size)
+                if (next != GulpTab.fromRoute(tabRoute).ordinal) {
+                    if (!pushed) scene.pushFromSwipe(totalX, y.coerceIn(0f, 1f))
+                    tabRoute = GulpTab.entries[next].route
+                }
+            }
+        }) {
+        WaterBackdrop(scene)
+        Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)) {
             AnimatedContent(targetState = tab, modifier = Modifier.fillMaxSize(),
                 transitionSpec = {
                     val enterMs = if (scene.reducedMotion) 0 else 300

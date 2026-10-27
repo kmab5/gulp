@@ -38,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -131,6 +133,7 @@ fun GulpNav(current: GulpTab, scene: WaterScene, viewport: IntSize,
 @Composable
 private fun NavGlyph(tab: GulpTab, scene: WaterScene, activation: Float, filled: Boolean, tint: Color, modifier: Modifier = Modifier) {
     Canvas(modifier.size(24.dp).graphicsLayer {
+        compositingStrategy = CompositingStrategy.Offscreen
         // Read frame state in layer placement, not parent recomposition.
         translationY = if (scene.reducedMotion) 0f else sin(scene.seconds * 1.10f + tab.ordinal * 1.3f) * 1.15.dp.toPx()
     }) {
@@ -158,10 +161,21 @@ private fun NavGlyph(tab: GulpTab, scene: WaterScene, activation: Float, filled:
                     size = androidx.compose.ui.geometry.Size(4*u,4*u), style = Stroke(stroke))
             }
             GulpTab.HISTORY -> {
-                drawCircle(tint, 9*u, p(12f,12f), style = if (filled) Stroke(3.2f*u) else Stroke(stroke))
-                rotate(activation*300f, pivot=p(12f,12f)) {
-                    drawLine(tint, p(12f,7f), p(12f,12f), stroke, StrokeCap.Round)
-                    drawLine(tint, p(12f,12f), p(16f,14f), stroke, StrokeCap.Round)
+                if (filled) {
+                    // Solid clock face, genuinely transparent clock hands.
+                    drawCircle(tint, 9*u, p(12f,12f))
+                    rotate(activation * 300f, pivot=p(12f,12f)) {
+                        drawLine(Color.Transparent, p(12f,6.5f), p(12f,12f),
+                            2.5f*u, StrokeCap.Round, blendMode=BlendMode.Clear)
+                        drawLine(Color.Transparent, p(12f,12f), p(16.5f,14.5f),
+                            2.5f*u, StrokeCap.Round, blendMode=BlendMode.Clear)
+                    }
+                } else {
+                    drawCircle(tint, 9*u, p(12f,12f), style = Stroke(stroke))
+                    rotate(activation * 300f, pivot=p(12f,12f)) {
+                        drawLine(tint, p(12f,7f), p(12f,12f), stroke, StrokeCap.Round)
+                        drawLine(tint, p(12f,12f), p(16f,14f), stroke, StrokeCap.Round)
+                    }
                 }
             }
             GulpTab.REVIEW -> {

@@ -1,3 +1,13 @@
+## 0.6.8-rc9 — UI refinements (2026-10-27)
+- Replaced squared scroll blur with conditional, content-only soft fade.
+- Fixed full-screen horizontal swipe with directional water momentum.
+- Constrained drink/shortcut editor sheets with scrolling and dark stable contrast.
+- Flattened glass materials, emphasized Home Done, centered the Home header mark.
+- Added proper calendar/time and Wake/Sleep vectors; spaced related controls.
+- Added 23 local drink icon IDs built from small, tintable Lucide SVG vectors (ISC).
+- Filled History tab face now has transparent hands.
+- Updated version expectations and added swipe regression checks.
+
 ## v0.6.7-rc8 — all remaining screens (27 October 2026)
 
 - Navbar: remove decorative water reserve and use shared waterline clipping for active and inactive glyphs.

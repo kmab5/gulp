@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.Alignment
+import com.kmab.gulp.R
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.kmab.gulp.core.design.GlassScrollableColumn
@@ -121,7 +126,7 @@ fun RemindersScreen(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Quiet hours", color = GulpPalette.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Note("You won't get drink notifications outside these hours.")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     GlassSurface(Modifier.weight(1f), radius = 16, tint = .29f) {
                     TextButton(onClick = {
                         TimePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, h, m ->
@@ -129,7 +134,14 @@ fun RemindersScreen(
                             if (changed.valid()) onPlanChange(changed)
                         }, plan.awakeStartMinute / 60, plan.awakeStartMinute % 60, true).show()
                     }, modifier = Modifier.fillMaxWidth()) {
-                        Text("☀  Wake  ${ReminderRules.formatMinute(plan.awakeStartMinute)}")
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            androidx.compose.foundation.Image(painterResource(R.drawable.ic_drink_sun),
+                                null, Modifier.size(21.dp),
+                                colorFilter = ColorFilter.tint(GulpPalette.White))
+                            Text("Wake ${ReminderRules.formatMinute(plan.awakeStartMinute)}",
+                                fontSize = 13.sp, color = GulpPalette.White)
+                        }
                     }
                     }
                     GlassSurface(Modifier.weight(1f), radius = 16, tint = .29f) {
@@ -139,7 +151,14 @@ fun RemindersScreen(
                             if (changed.valid()) onPlanChange(changed)
                         }, plan.awakeEndMinute / 60, plan.awakeEndMinute % 60, true).show()
                     }, modifier = Modifier.fillMaxWidth()) {
-                        Text("☾  Sleep  ${ReminderRules.formatMinute(plan.awakeEndMinute)}")
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            androidx.compose.foundation.Image(painterResource(R.drawable.ic_drink_moon),
+                                null, Modifier.size(21.dp),
+                                colorFilter = ColorFilter.tint(GulpPalette.White))
+                            Text("Sleep ${ReminderRules.formatMinute(plan.awakeEndMinute)}",
+                                fontSize = 13.sp, color = GulpPalette.White)
+                        }
                     }
                     }
                 }

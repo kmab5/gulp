@@ -2,6 +2,8 @@ package com.kmab.gulp.core.design
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,50 +41,45 @@ import androidx.compose.ui.unit.dp
 import com.kmab.gulp.core.domain.DrinkType
 import com.kmab.gulp.core.domain.DrinkTypeCatalog
 import com.kmab.gulp.core.domain.DrinkRules
+import com.kmab.gulp.R
 
-/** Small, self-authored vector set. All glyphs inherit tint; no heavyweight icon dependency. */
+/**
+ * Lightweight Lucide (ISC) vectors, bundled locally. Tint remains dynamic and
+ * works with the surrounding waterline color treatment; no font or runtime download.
+ */
 @Composable
 fun DrinkIcon(id: String, modifier: Modifier = Modifier, tint: Color = GulpPalette.Glacier) {
-    Canvas(modifier.size(24.dp)) {
-        val u = size.minDimension / 24f
-        val center = Offset(12*u,12*u)
-        when (id) {
-            "water", "bottle" -> {
-                val p = Path().apply {
-                    moveTo(12*u,2*u); cubicTo(9*u,7*u,5*u,11*u,5*u,15*u)
-                    cubicTo(5*u,24*u,19*u,24*u,19*u,15*u)
-                    cubicTo(19*u,11*u,15*u,7*u,12*u,2*u); close()
-                }
-                drawPath(p,tint)
-            }
-            "coffee", "tea", "cup" -> {
-                drawRoundRect(tint,topLeft=Offset(4*u,8*u),size=androidx.compose.ui.geometry.Size(14*u,11*u),
-                    cornerRadius=androidx.compose.ui.geometry.CornerRadius(2*u))
-                drawArc(tint,-95f,190f,false,topLeft=Offset(14*u,10*u),
-                    size=androidx.compose.ui.geometry.Size(8*u,8*u),style=Stroke(2*u))
-                if(id=="tea") drawLine(GulpPalette.Ink,Offset(7*u,13*u),Offset(14*u,13*u),u,StrokeCap.Round)
-            }
-            "milk", "glass", "juice" -> {
-                val p = Path().apply { moveTo(6*u,4*u);lineTo(18*u,4*u);lineTo(16*u,21*u)
-                    lineTo(8*u,21*u);close() }
-                drawPath(p,tint,style=Stroke(2.1f*u))
-                if(id=="juice") drawLine(tint,Offset(12*u,8*u),Offset(20*u,2*u),1.8f*u,StrokeCap.Round)
-            }
-            "leaf" -> {
-                val p=Path().apply{moveTo(3*u,19*u);cubicTo(1*u,9*u,11*u,2*u,22*u,3*u)
-                    cubicTo(21*u,15*u,13*u,23*u,3*u,19*u);close()}
-                drawPath(p,tint,style=Stroke(2*u))
-                drawLine(tint,Offset(4*u,20*u),Offset(17*u,8*u),1.5f*u)
-            }
-            "sparkle" -> {
-                val p=Path().apply{ moveTo(12*u,1*u);lineTo(15*u,9*u);lineTo(23*u,12*u)
-                    lineTo(15*u,15*u);lineTo(12*u,23*u);lineTo(9*u,15*u);lineTo(1*u,12*u)
-                    lineTo(9*u,9*u);close() }
-                drawPath(p,tint)
-            }
-            else -> { drawCircle(tint,9*u,center,style=Stroke(2.5f*u));drawCircle(tint,3*u,center) }
-        }
+    val iconId = when (id) {
+        "coffee" -> R.drawable.ic_drink_coffee
+        "tea" -> R.drawable.ic_drink_tea
+        "bottle" -> R.drawable.ic_drink_bottle
+        "glass" -> R.drawable.ic_drink_glass
+        "milk" -> R.drawable.ic_drink_milk
+        "juice" -> R.drawable.ic_drink_juice
+        "sparkle" -> R.drawable.ic_drink_sparkle
+        "cup" -> R.drawable.ic_drink_cup
+        "leaf" -> R.drawable.ic_drink_leaf
+        "other" -> R.drawable.ic_drink_other
+        "cocktail" -> R.drawable.ic_drink_cocktail
+        "beer" -> R.drawable.ic_drink_beer
+        "wine" -> R.drawable.ic_drink_wine
+        "iced" -> R.drawable.ic_drink_iced
+        "heart" -> R.drawable.ic_drink_heart
+        "sun" -> R.drawable.ic_drink_sun
+        "moon" -> R.drawable.ic_drink_moon
+        "hot" -> R.drawable.ic_drink_hot
+        "smoothie" -> R.drawable.ic_drink_smoothie
+        "flask" -> R.drawable.ic_drink_flask
+        "soda" -> R.drawable.ic_drink_soda
+        "lemon" -> R.drawable.ic_drink_lemon
+        else -> R.drawable.ic_drink_water
     }
+    androidx.compose.foundation.Image(
+        painter = androidx.compose.ui.res.painterResource(iconId),
+        contentDescription = null,
+        modifier = modifier.size(24.dp),
+        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(tint)
+    )
 }
 
 /** Lightweight selection view shared by recording, shortcuts and widget configuration. */
@@ -92,9 +91,13 @@ fun DrinkTypePicker(types: List<DrinkType>, selectedId: String, onSelect: (Drink
         verticalArrangement=Arrangement.spacedBy(7.dp), maxItemsInEachRow=3) {
         types.filterNot { it.archived }.forEach { type ->
             val selected=type.id==selectedId
-            Row(Modifier.clickable { onSelect(type) }
-                .then(if(selected) Modifier else Modifier)
-                .padding(horizontal=9.dp,vertical=10.dp),
+            val shape = RoundedCornerShape(12.dp)
+            Row(Modifier.background(if (selected) GulpPalette.Glacier.copy(alpha=.20f)
+                    else GulpPalette.DeepBlue.copy(alpha=.48f), shape)
+                .border(1.dp, if (selected) GulpPalette.Glacier.copy(alpha=.72f)
+                    else Color.White.copy(alpha=.16f),shape)
+                .clickable { onSelect(type) }
+                .padding(horizontal=11.dp,vertical=12.dp),
                 verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                 DrinkIcon(type.iconId,Modifier.size(19.dp),
@@ -118,7 +121,9 @@ fun DrinkTypeEditor(types: List<DrinkType>, onDismiss:()->Unit,
     AlertDialog(onDismissRequest=onDismiss,containerColor=GulpPalette.DeepBlue,
         title={ Text("My drinks",color=GulpPalette.White,fontWeight=FontWeight.Bold) },
         text={
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+            Column(Modifier.fillMaxWidth()
+                .heightIn(max=(LocalConfiguration.current.screenHeightDp*.52f).dp)
+                .verticalScroll(rememberScrollState()),
                 verticalArrangement=Arrangement.spacedBy(10.dp)) {
                 Text("Choose a drink to edit or create a new one.",color=GulpPalette.SoftWhite)
                 DrinkTypePicker(types.filterNot { it.archived },
@@ -157,7 +162,10 @@ fun WidgetDrinkEditor(types: List<DrinkType>, currentId: String, currentAmount: 
     val validAmount=amount.toIntOrNull()?.takeIf { it in 1..5000 }
     AlertDialog(onDismissRequest=onDismiss,containerColor=GulpPalette.DeepBlue,
         title={Text("Widget drink",color=GulpPalette.White)},
-        text={Column(verticalArrangement=Arrangement.spacedBy(9.dp)) {
+        text={Column(Modifier.fillMaxWidth()
+            .heightIn(max=(LocalConfiguration.current.screenHeightDp*.50f).dp)
+            .verticalScroll(rememberScrollState()),
+            verticalArrangement=Arrangement.spacedBy(9.dp)) {
             Text("Choose the drink and amount used by the launcher widgets.",color=GulpPalette.SoftWhite)
             DrinkTypePicker(types,typeId,{typeId=it.id})
             OutlinedTextField(amount,{ if(it.length<=5 && it.all(Char::isDigit)) amount=it },

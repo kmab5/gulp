@@ -27,7 +27,7 @@ has('app/src/main/java/com/kmab/gulp/feature/home/HomeScreen.kt',
     'conditionalScrollBlur', 'animateItem(')
 has('app/src/main/java/com/kmab/gulp/core/navigation/GulpNav.kt',
     'fontSize = 11.5.sp', 'delay(1650)', 'NavGlyph(')
-has('app/build.gradle.kts', 'versionCode = 13', 'versionName = "0.6.7-rc8"')
+has('app/build.gradle.kts', 'versionCode = 14', 'versionName = "0.6.8-rc9"')
 has('docs/DESIGN_CONTRACT.md', 'UI_FEEDBACK_AUDIT.md')
 has('docs/UI_FEEDBACK_AUDIT.md', 'True backdrop blur', 'Medical fluid plan')
 # No old package remnants or retired renderer should creep back into any source root.

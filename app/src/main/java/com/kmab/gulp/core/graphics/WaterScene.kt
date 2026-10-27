@@ -53,6 +53,14 @@ class WaterScene {
         targetTilt = WaterMath.normalizedTilt(gravityX) * motionIntensity
     }
 
+    /** Transient inertia from a horizontal page swipe, opposite its travel direction. */
+    fun pushFromSwipe(horizontal: Float, y: Float = .52f) {
+        if (reducedMotion || horizontal == 0f) return
+        val side = if (horizontal < 0f) -1f else 1f
+        tilt = (tilt + side * .68f * motionIntensity).coerceIn(-1f, 1f)
+        disturb(if (horizontal < 0f) .88f else .12f, y, 1.75f)
+    }
+
     fun disturb(x: Float, y: Float, power: Float = 0.45f) {
         if (reducedMotion) return
         if (impulses.size >= 12) impulses.removeAt(0)

@@ -97,66 +97,43 @@ fun GlassSurface(modifier: Modifier = Modifier,
         else Canvas(Modifier.matchParentSize()) {
             drawRect(GulpPalette.DeepBlue.copy(alpha = .75f))
         }
-        Box(Modifier.matchParentSize().graphicsLayer { alpha = tint }) {
-            Canvas(Modifier.matchParentSize()) {
-                drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha=.77f),
-                    Color(0xFF36708B), Color(0xFF173D58))))
-            }
-        }
+        // Flat frosted treatment: no shiny gradient, raised rim or directional highlight.
         Canvas(Modifier.matchParentSize()) {
-            val px = 1.dp.toPx()
-            drawRoundRect(Brush.linearGradient(listOf(Color.White.copy(alpha=.57f),
-                Color.White.copy(alpha=.08f), Color.White.copy(alpha=.27f))),
+            drawRect(GulpPalette.DeepBlue.copy(alpha = (.38f + tint).coerceIn(.28f, .72f)))
+            drawRoundRect(Color.White.copy(alpha = .13f),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius.dp.toPx()),
-                style = Stroke(px))
+                style = Stroke(.85.dp.toPx()))
         }
         content()
     }
 }
 
 /**
- * Draw the scrolling content once into a reusable graphics layer. Draw it normally, then
- * re-draw blurred versions *only* in clipped 24dp boundary strips when scrolling is possible.
- * This is a real blur of the actual text/cards, not a translucent dark water overlay.
- * Available on Android 12+; on older devices preserve sharp content instead of a dark scrim.
+ * A quiet feathered edge, not a blurry rectangle. Content fades gently only toward
+ * a direction where more content is actually hidden. Never changes the water layer.
+ * Uses an offscreen layer so DstIn affects only this scroll viewport.
  */
 @Composable
 fun Modifier.conditionalScrollBlur(
     canScrollBack: () -> Boolean,
     canScrollForward: () -> Boolean
-): Modifier {
-    val sharpLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
-    val blurLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
-    return this.drawWithContent {
-        val above = canScrollBack()
-        val below = canScrollForward()
-        // Avoid GPU layer recording when the contents fit or RenderEffect is unsupported.
-        if (android.os.Build.VERSION.SDK_INT < 31 || (!above && !below)) {
-            drawContent()
-        } else {
-            sharpLayer.record { this@drawWithContent.drawContent() }
-            drawLayer(sharpLayer)
-            blurLayer.record { this@drawWithContent.drawContent() }
-            blurLayer.renderEffect = androidx.compose.ui.graphics.BlurEffect(
-                12.dp.toPx(), 12.dp.toPx(), androidx.compose.ui.graphics.TileMode.Decal)
-            val edge = 28.dp.toPx().coerceAtMost(size.height / 2f)
-            // Graduated, transparent strips: no opaque scrim and no hard blur boundary.
-            val bands = floatArrayOf(1f, .69f, .37f)
-            val alphas = floatArrayOf(.24f, .38f, .64f)
-            for (i in bands.indices) {
-                val extent = edge * bands[i]
-                blurLayer.alpha = alphas[i]
-                if (above) {
-                    clipRect(0f, 0f, size.width, extent) { drawLayer(blurLayer) }
-                }
-                if (below) {
-                    clipRect(0f, size.height - extent, size.width, size.height) {
-                        drawLayer(blurLayer)
-                    }
-                }
-            }
-            blurLayer.alpha = 1f
-        }
+): Modifier = this.graphicsLayer {
+    compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
+}.drawWithContent {
+    drawContent()
+    val above = canScrollBack()
+    val below = canScrollForward()
+    if ((above || below) && size.height > 0f) {
+        val amount = (22.dp.toPx() / size.height).coerceIn(0f, .30f)
+        drawRect(
+            brush = Brush.verticalGradient(
+                0f to if (above) Color.Transparent else Color.White,
+                amount to Color.White,
+                (1f - amount) to Color.White,
+                1f to if (below) Color.Transparent else Color.White
+            ),
+            blendMode = androidx.compose.ui.graphics.BlendMode.DstIn
+        )
     }
 }
 

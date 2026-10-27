@@ -145,11 +145,14 @@ fun HomeScreen(
                         (fadeIn(tween(235)) + scaleIn(initialScale = .88f, animationSpec = tween(260))) togetherWith
                             (fadeOut(tween(165)) + scaleOut(targetScale = 1.07f, animationSpec = tween(205)))
                     }, label = "gulp wordmark/submark") { symbol ->
-                    if (symbol) {
-                        WaterAdaptiveSubmark(scene, viewport, Modifier.size(40.dp))
-                    } else {
-                        WaterAdaptiveText("gulp", scene, viewport,
-                            fontWeight = FontWeight.ExtraBold, fontSize = 25.sp)
+                    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        if (symbol) {
+                            WaterAdaptiveSubmark(scene, viewport, Modifier.size(40.dp))
+                        } else {
+                            WaterAdaptiveText("gulp", scene, viewport,
+                                fontWeight = FontWeight.ExtraBold, fontSize = 25.sp)
+                        }
                     }
                 }
             }
@@ -174,8 +177,11 @@ fun HomeScreen(
                             if (editing) onSaveTiles(draft) else draft = tiles
                             editing = !editing
                         }, radius = 14, tint = if (editing) .45f else .31f) {
-                        Box(Modifier.padding(horizontal = 18.dp, vertical = 11.dp)) {
-                        if (editing) Text("✓  Done", color = GulpPalette.Ink,
+                        Box(Modifier
+                            .then(if (editing) Modifier.background(GulpPalette.Glacier.copy(alpha = .20f),
+                                RoundedCornerShape(14.dp)) else Modifier)
+                            .padding(horizontal = 18.dp, vertical = 11.dp)) {
+                        if (editing) Text("✓  Done", color = Color.White,
                             fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         else WaterAdaptiveText("Edit Home", scene, viewport,
                             fontSize = 14.sp, fontWeight = FontWeight.SemiBold)

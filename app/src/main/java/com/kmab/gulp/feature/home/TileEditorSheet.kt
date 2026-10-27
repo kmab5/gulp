@@ -4,6 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -20,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -53,11 +60,16 @@ fun TileEditorSheet(
     var amount by remember(tile?.id) { mutableStateOf((tile?.amountMl ?: 250).toString()) }
     var wide by remember(tile?.id) { mutableStateOf(tile?.wide ?: false) }
     val ml = amount.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
+    val maxEditorHeight = (LocalConfiguration.current.screenHeightDp * .72f).dp
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
         contentColor = GulpPalette.White) {
-        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .32f) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 36.dp),
+        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .09f) {
+        // Dark translucent backing prevents labels vanishing under high water.
+        Box(Modifier.matchParentSize().background(GulpPalette.DeepBlue.copy(alpha = .78f)))
+        Column(Modifier.fillMaxWidth().heightIn(max = maxEditorHeight)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 22.dp).padding(bottom = 36.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (tile == null) "New shortcut" else "Edit shortcut", fontSize = 25.sp, fontWeight = FontWeight.Bold)
             DrinkTypePicker(types, typeId, onSelect = { typeId = it.id })
@@ -71,6 +83,11 @@ fun TileEditorSheet(
                 if (value.length <= 5 && value.all(Char::isDigit)) amount = value
             }, label = { Text("Amount (mL)") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                    focusedLabelColor = GulpPalette.Glacier, unfocusedLabelColor = Color.White,
+                    focusedBorderColor = GulpPalette.Glacier, unfocusedBorderColor = Color.White.copy(alpha = .48f),
+                    focusedSupportingTextColor = Color.White, unfocusedSupportingTextColor = Color.White.copy(alpha = .80f)),
                 isError = amount.isNotEmpty() && ml == null,
                 modifier = Modifier.fillMaxWidth())
             GulpToggleRow("Wide tile", "Make this shortcut span two columns",

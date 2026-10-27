@@ -5,9 +5,21 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ColorFilter
+import com.kmab.gulp.R
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -72,11 +85,16 @@ fun DrinkEditorSheet(
     }
     val parsed = text.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val maxEditorHeight = (LocalConfiguration.current.screenHeightDp * .72f).dp
     ModalBottomSheet(onDismissRequest = onClose, sheetState = sheetState,
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
         contentColor = GulpPalette.White) {
-        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .32f) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 38.dp),
+        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .09f) {
+        // Dark translucent backing prevents labels vanishing under high water.
+        Box(Modifier.matchParentSize().background(GulpPalette.DeepBlue.copy(alpha = .78f)))
+        Column(Modifier.fillMaxWidth().heightIn(max = maxEditorHeight)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 22.dp).padding(bottom = 38.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (existing == null) "Add a drink" else "Edit drink", fontSize = 26.sp, fontWeight = FontWeight.Bold)
             DrinkTypePicker(types, selectedTypeId,
@@ -90,17 +108,30 @@ fun DrinkEditorSheet(
                 if (value.length <= 5 && value.all { it.isDigit() }) text = value
             }, label = { Text("Amount (mL)") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                    focusedLabelColor = GulpPalette.Glacier, unfocusedLabelColor = Color.White,
+                    focusedBorderColor = GulpPalette.Glacier, unfocusedBorderColor = Color.White.copy(alpha = .48f),
+                    focusedSupportingTextColor = Color.White, unfocusedSupportingTextColor = Color.White.copy(alpha = .80f)),
                 isError = text.isNotEmpty() && parsed == null,
                 supportingText = { Text("Recorded volume, not a recommended amount") },
                 modifier = Modifier.fillMaxWidth())
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically) {
                 GlassSurface(Modifier.weight(1f), radius = 15, tint = .30f) {
                 TextButton(onClick = {
                     DatePickerDialog(context, android.R.style.Theme_Material_Dialog_Alert, { _, year, month, day ->
                         localTime = java.time.LocalDate.of(year, month + 1, day).atTime(localTime.toLocalTime())
                     }, localTime.year, localTime.monthValue - 1, localTime.dayOfMonth).show()
                 }, modifier = Modifier.fillMaxWidth()) {
-                    Text("▦  " + localTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy")))
+                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.foundation.Image(painterResource(R.drawable.ic_calendar_days),
+                            null, Modifier.size(23.dp), colorFilter = ColorFilter.tint(Color.White))
+                        Text(localTime.format(DateTimeFormatter.ofPattern("MMM d, yyyy")),
+                            color = Color.White, fontSize = 13.sp, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
                 }
                 }
                 GlassSurface(Modifier.weight(1f), radius = 15, tint = .30f) {
@@ -109,7 +140,13 @@ fun DrinkEditorSheet(
                         localTime = localTime.withHour(hour).withMinute(minute)
                     }, localTime.hour, localTime.minute, true).show()
                 }, modifier = Modifier.fillMaxWidth()) {
-                    Text("◷  " + localTime.format(DateTimeFormatter.ofPattern("HH:mm")))
+                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.foundation.Image(painterResource(R.drawable.ic_clock),
+                            null, Modifier.size(23.dp), colorFilter = ColorFilter.tint(Color.White))
+                        Text(localTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                            color = Color.White, fontSize = 14.sp)
+                    }
                 }
                 }
             }

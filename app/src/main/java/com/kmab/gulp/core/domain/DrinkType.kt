@@ -12,7 +12,7 @@ data class DrinkType(
 
 /** Curated built-in vector IDs; no fonts, bitmap packs, or network dependency. */
 object DrinkTypeCatalog {
-    val iconIds = listOf("water", "coffee", "tea", "bottle", "glass", "milk", "juice", "sparkle", "cup", "leaf", "other")
+    val iconIds = listOf("water", "coffee", "tea", "bottle", "glass", "milk", "juice", "sparkle", "cup", "leaf", "other", "cocktail", "beer", "wine", "iced", "heart", "sun", "moon", "hot", "smoothie", "flask", "soda", "lemon")
     val builtins: List<DrinkType> = listOf(
         DrinkType("water", "Water", "water", 250, DrinkKind.WATER),
         DrinkType("coffee", "Coffee", "coffee", 200, DrinkKind.COFFEE),
