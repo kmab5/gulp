@@ -31,7 +31,7 @@ class WaterScene {
         private set
     val impulses = mutableStateListOf<WaterImpulse>()
 
-    fun setMotionIntensity(value: Float) {
+    fun updateMotionIntensity(value: Float) {
         motionIntensity = value.coerceIn(.25f, 1.5f)
     }
 

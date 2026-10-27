@@ -242,7 +242,7 @@ fun GulpApp(active: Boolean = true) {
         }
     }
     LaunchedEffect(preferences.motionStrengthPct) {
-        scene.setMotionIntensity(preferences.motionStrengthPct / 100f)
+        scene.updateMotionIntensity(preferences.motionStrengthPct / 100f)
     }
     WaterTiltSensor(scene, active, preferences.tiltEnabled)
 
