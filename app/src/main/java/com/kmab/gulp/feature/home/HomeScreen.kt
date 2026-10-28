@@ -99,6 +99,7 @@ fun HomeScreen(
     tiles: List<HomeTile>, onAddDrink: () -> Unit,
     showBrandSubmark: Boolean, onToggleBrand: () -> Unit,
     onLogShortcut: (HomeTile) -> Unit, onSaveTiles: (List<HomeTile>) -> Unit,
+    onEnterWaterPlay: () -> Unit, waterPlayControlAlpha: Float,
     types: List<DrinkType> = DrinkTypeCatalog.builtins,
     onCreateDrinkType: (String, String, Int) -> Unit = { _, _, _ -> }
 ) {
@@ -259,15 +260,26 @@ fun HomeScreen(
                 }
             }
         }
-        Column(Modifier.fillMaxWidth().padding(top = 29.dp, bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            WaterAdaptiveText("Today", scene, viewport, fontWeight = FontWeight.Medium, fontSize = 13.sp)
-            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                WaterAdaptiveText(todayMl.toString(), scene, viewport, fontWeight = FontWeight.ExtraBold,
-                    fontSize = 43.sp, lineHeight = 47.sp)
-                WaterAdaptiveText("mL recorded", scene, viewport, fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Row(Modifier.fillMaxWidth().padding(top = 29.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                WaterAdaptiveText("Today", scene, viewport,
+                    fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                Row(verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    WaterAdaptiveText(todayMl.toString(), scene, viewport,
+                        fontWeight = FontWeight.ExtraBold, fontSize = 43.sp, lineHeight = 47.sp)
+                    WaterAdaptiveText("mL recorded", scene, viewport,
+                        fontWeight = FontWeight.Bold, fontSize = 13.sp,
+                        modifier = Modifier.padding(bottom = 8.dp))
+                }
             }
+            com.kmab.gulp.core.design.WaterPlayControl(
+                scene, viewport, com.kmab.gulp.core.design.PlayControlGlyph.HIDE_HUD,
+                label = "Hide HUD and play with water",
+                onClick = onEnterWaterPlay,
+                modifier = Modifier.graphicsLayer { alpha = waterPlayControlAlpha })
         }
     }
     if (tileToEdit != null || addTile) {

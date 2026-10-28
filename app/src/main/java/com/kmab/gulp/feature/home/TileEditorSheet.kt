@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -63,14 +66,20 @@ fun TileEditorSheet(
     val ml = amount.toIntOrNull()?.takeIf { it in DrinkRules.MIN_ENTRY_ML..DrinkRules.MAX_ENTRY_ML }
     val maxEditorHeight = (LocalConfiguration.current.screenHeightDp * .72f).dp
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = GulpPalette.DeepBlue,
+        containerColor = Color.Transparent,
+        dragHandle = null,
         contentColor = GulpPalette.White) {
-        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .09f) {
-        // Dark translucent backing prevents labels vanishing under high water.
-        Box(Modifier.matchParentSize().background(GulpPalette.DeepBlue.copy(alpha = .78f)))
+        GlassSurface(Modifier.fillMaxWidth(), radius = 28, tint = .20f) {
+        Column(Modifier.fillMaxWidth()) {
+            // The drag handle shares the *same* frosted pane as the rest of the editor.
+            Box(Modifier.fillMaxWidth().padding(top = 17.dp, bottom = 22.dp),
+                contentAlignment = Alignment.Center) {
+                Box(Modifier.size(width = 46.dp, height = 5.dp)
+                    .background(GulpPalette.SoftWhite.copy(alpha = .85f), RoundedCornerShape(50)))
+            }
         Column(Modifier.fillMaxWidth().heightIn(max = maxEditorHeight)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 22.dp).padding(bottom = 36.dp),
+            .padding(horizontal = 22.dp).navigationBarsPadding().padding(bottom = 36.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (tile == null) "New shortcut" else "Edit shortcut", fontSize = 25.sp, fontWeight = FontWeight.Bold)
             DrinkTypePicker(types, typeId, onSelect = { typeId = it.id })
@@ -102,6 +111,7 @@ fun TileEditorSheet(
             if (onRemove != null) TextButton(onClick = onRemove, modifier = Modifier.fillMaxWidth()) {
                 Text("Remove shortcut", color = GulpPalette.SoftWhite)
             }
+        }
         }
         }
     }

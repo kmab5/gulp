@@ -37,3 +37,7 @@ Thumbs.db
 
 # Optional third-party configuration
 google-services.json
+
+# Python stuff
+*.pyc
+__pycache__/

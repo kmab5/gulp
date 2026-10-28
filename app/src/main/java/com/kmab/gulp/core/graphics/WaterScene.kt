@@ -61,6 +61,15 @@ class WaterScene {
         disturb(if (horizontal < 0f) .88f else .12f, y, 1.75f)
     }
 
+    /** Direct manipulation in play mode; transient and never changes recorded volume. */
+    fun playDrag(dxFraction: Float, x: Float, y: Float, sensitivity: Float) {
+        if (reducedMotion) return
+        val strength = sensitivity.coerceIn(.5f, 1.5f)
+        tilt = (tilt + dxFraction.coerceIn(-.2f, .2f) * 3.5f * strength)
+            .coerceIn(-1f, 1f)
+        disturb(x, y, 1.15f * strength)
+    }
+
     fun disturb(x: Float, y: Float, power: Float = 0.45f) {
         if (reducedMotion) return
         if (impulses.size >= 12) impulses.removeAt(0)

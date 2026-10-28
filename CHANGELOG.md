@@ -1,3 +1,7 @@
+## 0.7.0 — Water Play (2026-10-28)
+- Added Water Play mode to Home page
+- Fixed small design inconsistencies
+
 ## 0.6.8-rc9 — UI refinements (2026-10-27)
 - Replaced squared scroll blur with conditional, content-only soft fade.
 - Fixed full-screen horizontal swipe with directional water momentum.

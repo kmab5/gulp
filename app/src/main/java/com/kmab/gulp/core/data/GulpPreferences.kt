@@ -31,6 +31,9 @@ data class GulpPreferences(
     val glassBlurEnabled: Boolean = true,
     val swipeTabsEnabled: Boolean = true,
     val motionStrengthPct: Int = 100,
+    val waterPlaySensitivityPct: Int = 150,
+    val waterPlayFillPct: Int = 62,
+    val waterPlayTouchEnabled: Boolean = true,
     val widgetDrinkTypeId: String = "water",
     val widgetAmountMl: Int = 250
 )
@@ -44,6 +47,9 @@ class GulpPreferencesStore(private val context: Context) {
     private val glassKey = booleanPreferencesKey("glass_blur_enabled_v1")
     private val swipeKey = booleanPreferencesKey("swipe_tabs_enabled_v1")
     private val motionKey = intPreferencesKey("motion_strength_pct_v1")
+    private val playStrengthKey = intPreferencesKey("water_play_sensitivity_v1")
+    private val playFillKey = intPreferencesKey("water_play_fill_v1")
+    private val playTouchKey = booleanPreferencesKey("water_play_touch_v1")
     private val tileKey = stringPreferencesKey("home_tiles_v1")
     private val widgetTypeKey = stringPreferencesKey("widget_drink_type_id_v2")
     private val widgetAmountKey = intPreferencesKey("widget_amount_ml_v2")
@@ -84,6 +90,9 @@ class GulpPreferencesStore(private val context: Context) {
             glassBlurEnabled = p[glassKey] ?: true,
             swipeTabsEnabled = p[swipeKey] ?: true,
             motionStrengthPct = (p[motionKey] ?: 100).coerceIn(25, 150),
+            waterPlaySensitivityPct = (p[playStrengthKey] ?: 150).coerceIn(50, 150),
+            waterPlayFillPct = (p[playFillKey] ?: 62).coerceIn(20, 94),
+            waterPlayTouchEnabled = p[playTouchKey] ?: true,
             widgetDrinkTypeId = p[widgetTypeKey] ?: "water",
             widgetAmountMl = (p[widgetAmountKey] ?: 250).coerceIn(1, 5000)
         )
@@ -174,6 +183,16 @@ class GulpPreferencesStore(private val context: Context) {
             p[glassKey] = glassEnabled
             p[swipeKey] = swipeEnabled
             p[motionKey] = motionPercent
+        }
+    }
+
+    /** Play visuals do not alter hydration totals, medical settings, or reminders. */
+    suspend fun setWaterPlaySettings(sensitivityPct: Int, fillPct: Int, touch: Boolean) {
+        require(sensitivityPct in 50..150 && fillPct in 20..94)
+        context.gulpDataStore.edit { p ->
+            p[playStrengthKey] = sensitivityPct
+            p[playFillKey] = fillPct
+            p[playTouchKey] = touch
         }
     }
 

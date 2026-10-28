@@ -42,6 +42,7 @@ jobs:
           python3 tools/verify_drink_types.py
           python3 tools/verify_general_round.py
           python3 tools/verify_round09_ui.py
+          python3 tools/verify_water_play_ui.py
           bash tools/verify_round08.sh
       - name: Compile, test, lint and package
         run: |

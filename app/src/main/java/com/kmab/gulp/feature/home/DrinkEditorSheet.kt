@@ -87,14 +87,20 @@ fun DrinkEditorSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val maxEditorHeight = (LocalConfiguration.current.screenHeightDp * .72f).dp
     ModalBottomSheet(onDismissRequest = onClose, sheetState = sheetState,
-        containerColor = GulpPalette.DeepBlue,
+        containerColor = Color.Transparent,
+        dragHandle = null,
         contentColor = GulpPalette.White) {
-        GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .09f) {
-        // Dark translucent backing prevents labels vanishing under high water.
-        Box(Modifier.matchParentSize().background(GulpPalette.DeepBlue.copy(alpha = .78f)))
+        GlassSurface(Modifier.fillMaxWidth(), radius = 28, tint = .20f) {
+        Column(Modifier.fillMaxWidth()) {
+            // The drag handle shares the *same* frosted pane as the rest of the editor.
+            Box(Modifier.fillMaxWidth().padding(top = 17.dp, bottom = 22.dp),
+                contentAlignment = Alignment.Center) {
+                Box(Modifier.size(width = 46.dp, height = 5.dp)
+                    .background(GulpPalette.SoftWhite.copy(alpha = .85f), RoundedCornerShape(50)))
+            }
         Column(Modifier.fillMaxWidth().heightIn(max = maxEditorHeight)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 22.dp).padding(bottom = 38.dp),
+            .padding(horizontal = 22.dp).navigationBarsPadding().padding(bottom = 38.dp),
             verticalArrangement = Arrangement.spacedBy(17.dp)) {
             Text(if (existing == null) "Add a drink" else "Edit drink", fontSize = 26.sp, fontWeight = FontWeight.Bold)
             DrinkTypePicker(types, selectedTypeId,
@@ -164,6 +170,7 @@ fun DrinkEditorSheet(
                     Text("Delete this drink", color = GulpPalette.SoftWhite)
                 }
             }
+        }
         }
         }
     }

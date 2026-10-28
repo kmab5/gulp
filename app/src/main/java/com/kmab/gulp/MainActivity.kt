@@ -16,6 +16,8 @@ import java.io.IOException
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,6 +34,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +76,8 @@ import com.kmab.gulp.core.design.LocalGlassEnabled
 import com.kmab.gulp.core.design.LocalGlassScene
 import com.kmab.gulp.core.design.LocalGlassViewport
 import com.kmab.gulp.core.design.GulpToggleRow
+import com.kmab.gulp.core.design.PlayControlGlyph
+import com.kmab.gulp.core.design.WaterPlayControl
 import com.kmab.gulp.core.domain.DrinkKind
 import com.kmab.gulp.core.domain.DrinkType
 import com.kmab.gulp.core.domain.DrinkTypeCatalog
@@ -85,6 +92,7 @@ import com.kmab.gulp.core.graphics.WaterBackdrop
 import com.kmab.gulp.core.graphics.WaterTiltSensor
 import com.kmab.gulp.core.graphics.rememberWaterScene
 import com.kmab.gulp.core.graphics.waterTouchFeedback
+import com.kmab.gulp.core.graphics.waterPlayTouchFeedback
 import com.kmab.gulp.core.reminders.GulpReminderScheduler
 import com.kmab.gulp.core.navigation.GulpNav
 import com.kmab.gulp.core.navigation.GulpTab
@@ -159,6 +167,16 @@ fun GulpApp(active: Boolean = true) {
     var homeEditRequest by remember { mutableIntStateOf(0) }
     val tab = GulpTab.fromRoute(tabRoute)
     var showWaterLab by rememberSaveable { mutableStateOf(false) }
+    var waterPlayMode by rememberSaveable { mutableStateOf(false) }
+    var showWaterPlaySettings by rememberSaveable { mutableStateOf(false) }
+    var playSensitivity by rememberSaveable { mutableFloatStateOf(preferences.waterPlaySensitivityPct / 100f) }
+    var playWaterFill by rememberSaveable { mutableFloatStateOf(preferences.waterPlayFillPct / 100f) }
+    var playTouchEnabled by rememberSaveable { mutableStateOf(preferences.waterPlayTouchEnabled) }
+    var controlsVisible by remember { mutableStateOf(true) }
+    var playActivityCount by remember { mutableIntStateOf(0) }
+    val playControlsAlpha by animateFloatAsState(
+        targetValue = if (controlsVisible) 1f else .19f,
+        animationSpec = tween(400), label = "play control fade")
     var systemReduced by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showDrinkSheet by remember { mutableStateOf(false) }
@@ -230,8 +248,16 @@ fun GulpApp(active: Boolean = true) {
             while (true) { delay(30_000); clock = System.currentTimeMillis() }
         }
     }
-    LaunchedEffect(todayMl, preferences.visualCapacityMl) {
-        scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
+    LaunchedEffect(todayMl, preferences.visualCapacityMl, waterPlayMode, playWaterFill) {
+        scene.setPreviewFill(if (waterPlayMode) com.kmab.gulp.core.domain.WaterPlayRules.playFill(playWaterFill)
+            else DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
+    }
+    LaunchedEffect(tab, waterPlayMode, playActivityCount, showWaterPlaySettings, active) {
+        controlsVisible = true
+        if (active && tab == GulpTab.HOME && !showWaterPlaySettings) {
+            delay(3_200)
+            controlsVisible = false
+        }
     }
     LaunchedEffect(context, active, preferences.reduceMotion) {
         if (active) {
@@ -241,8 +267,9 @@ fun GulpApp(active: Boolean = true) {
             scene.updateReducedMotion(systemReduced || preferences.reduceMotion)
         }
     }
-    LaunchedEffect(preferences.motionStrengthPct) {
-        scene.updateMotionIntensity(preferences.motionStrengthPct / 100f)
+    LaunchedEffect(preferences.motionStrengthPct, waterPlayMode, playSensitivity) {
+        scene.updateMotionIntensity(if (waterPlayMode) com.kmab.gulp.core.domain.WaterPlayRules.sensitivity(playSensitivity)
+            else preferences.motionStrengthPct / 100f)
     }
     WaterTiltSensor(scene, active, preferences.tiltEnabled)
 
@@ -251,9 +278,21 @@ fun GulpApp(active: Boolean = true) {
         LocalGlassEnabled provides preferences.glassBlurEnabled) {
     Box(Modifier.fillMaxSize().blur(if (showDrinkSheet) 5.dp else 0.dp)
         .onSizeChanged { viewport = it }
-        .waterTouchFeedback(scene, preferences.touchRipplesEnabled)
-        .pointerInput(preferences.swipeTabsEnabled, tabRoute) {
-            if (preferences.swipeTabsEnabled) awaitEachGesture {
+        .waterTouchFeedback(scene, preferences.touchRipplesEnabled && !waterPlayMode)
+        .waterPlayTouchFeedback(scene, enabled = waterPlayMode && playTouchEnabled,
+            sensitivity = playSensitivity)
+        // Passive first-pass observer: waking the buttons never steals a water gesture.
+        .pointerInput(tabRoute, waterPlayMode) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    if (tabRoute == GulpTab.HOME.route && event.changes.any {
+                            it.pressed && !it.previousPressed }) playActivityCount++
+                }
+            }
+        }
+        .pointerInput(preferences.swipeTabsEnabled, tabRoute, waterPlayMode) {
+            if (preferences.swipeTabsEnabled && !waterPlayMode) awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 var totalX = 0f
                 var totalY = 0f
@@ -286,6 +325,7 @@ fun GulpApp(active: Boolean = true) {
             }
         }) {
         WaterBackdrop(scene)
+        if (!waterPlayMode) {
         Box(Modifier.fillMaxSize().statusBarsPadding().padding(bottom = 92.dp)) {
             AnimatedContent(targetState = tab, modifier = Modifier.fillMaxSize(),
                 transitionSpec = {
@@ -325,7 +365,12 @@ fun GulpApp(active: Boolean = true) {
                                 if (result == SnackbarResult.ActionPerformed) repository.undo(ticket)
                             }
                         },
-                        onSaveTiles = { layout -> scope.launch { preferencesStore.saveTiles(layout) } })
+                        onSaveTiles = { layout -> scope.launch { preferencesStore.saveTiles(layout) } },
+                        onEnterWaterPlay = {
+                            waterPlayMode = true
+                            playActivityCount++
+                        },
+                        waterPlayControlAlpha = playControlsAlpha)
                     GulpTab.REMINDERS -> RemindersScreen(scene, viewport, preferences, notificationPermission, clock,
                         onPlanChange = { plan ->
                             scope.launch { preferencesStore.setReminders(plan) }
@@ -365,9 +410,24 @@ fun GulpApp(active: Boolean = true) {
                 if (next != tab) { scene.disturb(.5f, .88f, .26f); tabRoute = next.route }
             }, modifier = Modifier.align(Alignment.BottomCenter))
         SnackbarHost(snackbars, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 99.dp))
+        } else {
+            // No nav, headers, cards or snackbars: only the interactive water canvas.
+            Column(Modifier.align(Alignment.BottomEnd)
+                    .padding(end = 22.dp, bottom = 30.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                WaterPlayControl(scene, viewport, PlayControlGlyph.SETTINGS,
+                    label = "Water play settings",
+                    onClick = { showWaterPlaySettings = true; playActivityCount++ },
+                    modifier = Modifier.graphicsLayer { alpha = playControlsAlpha })
+                WaterPlayControl(scene, viewport, PlayControlGlyph.SHOW_HUD,
+                    label = "Show Home HUD",
+                    onClick = { waterPlayMode = false; playActivityCount++ },
+                    modifier = Modifier.graphicsLayer { alpha = playControlsAlpha })
+            }
+        }
     }
 
-    } // end preference-driven contrast provider
     if (showDeleteConfirmation) AlertDialog(
         onDismissRequest = { showDeleteConfirmation = false },
         title = { Text("Delete all drinks?") },
@@ -448,6 +508,43 @@ fun GulpApp(active: Boolean = true) {
         } },
         onSave = { edited -> scope.launch { repository.saveDrinkType(edited) } },
         onArchive = { id -> scope.launch { repository.archiveDrinkType(id) } })
+    if (showWaterPlaySettings) AlertDialog(
+        onDismissRequest = {
+            showWaterPlaySettings = false
+            scope.launch { preferencesStore.setWaterPlaySettings(
+                (playSensitivity * 100).toInt().coerceIn(50, 150),
+                (playWaterFill * 100).toInt().coerceIn(20, 94), playTouchEnabled) }
+        },
+        containerColor = GulpPalette.DeepBlue,
+        titleContentColor = GulpPalette.White,
+        textContentColor = GulpPalette.SoftWhite,
+        title = { Text("Water play") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Only the visual water changes. Your drinks and reminders stay untouched.")
+                Text("Touch sensitivity · ${(playSensitivity * 100).toInt()}%")
+                Slider(value = playSensitivity, onValueChange = { playSensitivity = it },
+                    valueRange = .5f..1.5f, steps = 9,
+                    enabled = !(preferences.reduceMotion || systemReduced))
+                Text("Water level · ${(playWaterFill * 100).toInt()}%")
+                Slider(value = playWaterFill, onValueChange = { playWaterFill = it },
+                    valueRange = .20f..0.94f, steps = 0)
+                GulpToggleRow("Touch response", "Ripples and pushback while dragging",
+                    checked = playTouchEnabled, onCheckedChange = { playTouchEnabled = it })
+                if (preferences.reduceMotion || systemReduced) {
+                    Text("Motion is reduced by your device or app accessibility setting.")
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = {
+            showWaterPlaySettings = false
+            scope.launch { preferencesStore.setWaterPlaySettings(
+                (playSensitivity * 100).toInt().coerceIn(50, 150),
+                (playWaterFill * 100).toInt().coerceIn(20, 94), playTouchEnabled) }
+        }) {
+            Text("Done", color = GulpPalette.Glacier)
+        } }
+    )
     if (showWaterLab) AlertDialog(onDismissRequest = {
         showWaterLab = false
         scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
@@ -470,4 +567,5 @@ fun GulpApp(active: Boolean = true) {
         scene.setPreviewFill(DrinkRules.visualFill(todayMl, preferences.visualCapacityMl))
     }) { Text("Done") } }, containerColor = GulpPalette.DeepBlue,
         titleContentColor = Color.White, textContentColor = GulpPalette.SoftWhite)
+    } // end preference-driven contrast + water scene provider
 }

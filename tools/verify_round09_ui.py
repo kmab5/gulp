@@ -42,7 +42,7 @@ checks = {
         'DrinkIconPicker(selectedId' in content('core/design/NewDrinkTypeDialog.kt')
         and 'DrinkIconPicker(selectedId' in content('core/design/DrinkTypeUI.kt')
         and 'DrinkTypeCatalog.selectableIconIds.forEach' in content('core/design/DrinkTypeUI.kt'),
-    'release is updated': 'versionName = "0.6.8-rc9"' in (ROOT/'app/build.gradle.kts').read_text(),
+    'release is updated': 'versionName = "0.7.0"' in (ROOT/'app/build.gradle.kts').read_text(),
 }
 for label, ok in checks.items():
     assert ok, label
