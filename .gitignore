@@ -41,3 +41,4 @@ google-services.json
 # Python stuff
 *.pyc
 __pycache__/
+raw/
