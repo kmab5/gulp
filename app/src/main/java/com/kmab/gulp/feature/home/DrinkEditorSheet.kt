@@ -87,7 +87,7 @@ fun DrinkEditorSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val maxEditorHeight = (LocalConfiguration.current.screenHeightDp * .72f).dp
     ModalBottomSheet(onDismissRequest = onClose, sheetState = sheetState,
-        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        containerColor = GulpPalette.DeepBlue,
         contentColor = GulpPalette.White) {
         GlassSurface(Modifier.fillMaxWidth(), radius = 26, tint = .09f) {
         // Dark translucent backing prevents labels vanishing under high water.

@@ -35,6 +35,13 @@ checks = {
     'history selection is inverted': 'BlendMode.Clear' in content('core/navigation/GulpNav.kt'),
     'extended catalogue': '"smoothie"' in content('core/domain/DrinkType.kt'),
     'no runtime icon downloads': 'painterResource(iconId)' in content('core/design/DrinkTypeUI.kt'),
+    'editor sheet handle is fully backed': all(
+        'containerColor = GulpPalette.DeepBlue' in content(f'feature/home/{sheet}.kt')
+        for sheet in ('DrinkEditorSheet', 'TileEditorSheet')),
+    'icon-only palette, no repeated labels':
+        'DrinkIconPicker(selectedId' in content('core/design/NewDrinkTypeDialog.kt')
+        and 'DrinkIconPicker(selectedId' in content('core/design/DrinkTypeUI.kt')
+        and 'DrinkTypeCatalog.selectableIconIds.forEach' in content('core/design/DrinkTypeUI.kt'),
     'release is updated': 'versionName = "0.6.8-rc9"' in (ROOT/'app/build.gradle.kts').read_text(),
 }
 for label, ok in checks.items():
@@ -48,5 +55,14 @@ for id in ids:
     ET.parse(path)
 for id in ('calendar_days','clock'):
     ET.parse(resource/f'ic_{id}.xml')
+# Compare actual vector geometry rather than treating different names as unique icons.
+def geometry(icon_id):
+    root = ET.parse(resource / f'ic_drink_{icon_id}.xml').getroot()
+    return tuple(node.attrib.get('{http://schemas.android.com/apk/res/android}pathData')
+                 for node in root.iter() if '{http://schemas.android.com/apk/res/android}pathData' in node.attrib)
+canonical = [i for i in ids if i not in {'leaf', 'soda', 'lemon'}]
+assert len(canonical) == len({geometry(i) for i in canonical}), 'duplicate icon shapes in palette'
+for hidden, visible in {'leaf':'tea','soda':'cup','lemon':'juice'}.items():
+    assert geometry(hidden) == geometry(visible), f'{hidden} alias no longer matches {visible}'
 assert (ROOT/'docs/third_party/LUCIDE_ICONS_ISC.md').is_file()
 print(f'PASS: {len(checks)} source checks and {len(ids)+2} vector resources')

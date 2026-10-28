@@ -108,6 +108,36 @@ fun DrinkTypePicker(types: List<DrinkType>, selectedId: String, onSelect: (Drink
     }
 }
 
+/** Icon-only palette: each visual shape appears once, including old saved aliases. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun DrinkIconPicker(selectedId: String, onSelect: (String) -> Unit) {
+    val shownSelection = DrinkTypeCatalog.pickerIconId(selectedId)
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp),
+        maxItemsInEachRow = 4
+    ) {
+        DrinkTypeCatalog.selectableIconIds.forEach { id ->
+            val selected = shownSelection == id
+            val shape = RoundedCornerShape(14.dp)
+            Box(
+                modifier = Modifier.size(51.dp)
+                    .background(if (selected) GulpPalette.Glacier.copy(alpha = .21f)
+                        else GulpPalette.Surface.copy(alpha = .85f), shape)
+                    .border(1.dp, if (selected) GulpPalette.Glacier else
+                        GulpPalette.Edge.copy(alpha = .28f), shape)
+                    .clickable(onClickLabel = "Choose $id icon") { onSelect(id) },
+                contentAlignment = Alignment.Center
+            ) {
+                DrinkIcon(id, Modifier.size(27.dp),
+                    if (selected) GulpPalette.Glacier else GulpPalette.White)
+            }
+        }
+    }
+}
+
 /** A shared creation/edit/archive dialog; editing never mutates logged snapshot names/icons. */
 @Composable
 fun DrinkTypeEditor(types: List<DrinkType>, onDismiss:()->Unit,
@@ -132,8 +162,7 @@ fun DrinkTypeEditor(types: List<DrinkType>, onDismiss:()->Unit,
                 OutlinedTextField(name,{ if(it.length<=32) name=it },
                     label={Text("Drink name")},singleLine=true)
                 Text("Icon",color=GulpPalette.White)
-                DrinkTypePicker(DrinkTypeCatalog.iconIds.map { DrinkType(it,it.replaceFirstChar(Char::uppercase),it,250) },
-                    icon,onSelect={icon=it.iconId})
+                DrinkIconPicker(selectedId = icon, onSelect = { icon = it })
                 OutlinedTextField(amount,{ if(it.length<=5 && it.all(Char::isDigit)) amount=it },
                     label={Text("Default amount (mL)")},singleLine=true,
                     keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))

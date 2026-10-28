@@ -16,7 +16,7 @@ checks={
  'conditional top edge': 'canScrollBack()' in glass,
  'conditional bottom edge': 'canScrollForward()' in glass,
  'screen blur shared': all('GlassScrollableColumn' in read('app/src/main/java/com/kmab/gulp/feature/'+p) for p in ['history/HistoryScreen.kt','reminders/RemindersScreen.kt','review/ReviewScreen.kt','settings/SettingsScreen.kt','onboarding/OnboardingScreen.kt']),
- 'home blur conditional': 'conditionalScrollBlur' in home and 'rememberGraphicsLayer()' in glass,
+ 'home feather conditional': 'conditionalScrollBlur' in home and 'BlendMode.DstIn' in glass and 'CompositingStrategy.Offscreen' in glass,
  'navbar transparent': 'GlassSurface(' in nav and 'Brush.radialGradient' not in nav,
  'water-aware icon glyphs': 'NavGlyph(tab, scene, phase.value, selectedTab, Color.White,' in nav and 'waterBelowClip' in nav and 'waterAboveClip' in nav,
  'nav glyph wobble': 'sin(scene.seconds' in nav,

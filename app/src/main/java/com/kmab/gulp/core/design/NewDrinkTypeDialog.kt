@@ -43,9 +43,7 @@ fun NewDrinkTypeDialog(onDismiss: () -> Unit, onCreate: (String, String, Int) ->
                 OutlinedTextField(name, onValueChange = { if (it.length <= 32) name = it },
                     label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Text("Choose an icon", color = GulpPalette.White)
-                DrinkTypePicker(DrinkTypeCatalog.iconIds.map {
-                    DrinkType(it, it.replaceFirstChar(Char::uppercase), it, 250)
-                }, icon, onSelect = { icon = it.iconId })
+                DrinkIconPicker(selectedId = icon, onSelect = { icon = it })
                 OutlinedTextField(amount, onValueChange = {
                     if (it.length <= 5 && it.all(Char::isDigit)) amount = it
                 }, label = { Text("Usual amount (mL)") },

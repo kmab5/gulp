@@ -13,6 +13,16 @@ data class DrinkType(
 /** Curated built-in vector IDs; no fonts, bitmap packs, or network dependency. */
 object DrinkTypeCatalog {
     val iconIds = listOf("water", "coffee", "tea", "bottle", "glass", "milk", "juice", "sparkle", "cup", "leaf", "other", "cocktail", "beer", "wine", "iced", "heart", "sun", "moon", "hot", "smoothie", "flask", "soda", "lemon")
+    // Three pairs share exactly the same bundled VectorDrawable path geometry.
+    // Keep all legacy IDs valid for saved drink types and history snapshots.
+    private val duplicatePickerIds = setOf("leaf", "soda", "lemon")
+    val selectableIconIds = iconIds.filterNot { it in duplicatePickerIds }
+    fun pickerIconId(id: String): String = when (id) {
+        "leaf" -> "tea"
+        "soda" -> "cup"
+        "lemon" -> "juice"
+        else -> if (id in selectableIconIds) id else "other"
+    }
     val builtins: List<DrinkType> = listOf(
         DrinkType("water", "Water", "water", 250, DrinkKind.WATER),
         DrinkType("coffee", "Coffee", "coffee", 200, DrinkKind.COFFEE),
