@@ -32,9 +32,9 @@ for rel in ('MainActivity.kt','core/graphics/WaterBackdrop.kt','core/graphics/Wa
 
 for label in ('Home','Reminders','History','Review','Settings'):
     require(f'"{label}"' in (pkg/'core/navigation/GulpTab.kt').read_text(), f'Missing tab {label}')
-require('no navbar island' in (root / 'docs/DESIGN_CONTRACT.md').read_text().lower() or 'no navbar' in (root/'docs/DESIGN_CONTRACT.md').read_text().lower(), 'Missing approved navbar rule')
-require('mask' in (root/'docs/DESIGN_CONTRACT.md').read_text().lower(), 'Missing shared waterline mask rule')
-require('widget' in (root/'docs/NEXT_TURNS.md').read_text().lower(), 'Missing initial release widget scope')
+require('no navbar island' in (root / 'docs/logs/DESIGN_CONTRACT.md').read_text().lower() or 'no navbar' in (root/'docs/logs/DESIGN_CONTRACT.md').read_text().lower(), 'Missing approved navbar rule')
+require('mask' in (root/'docs/logs/DESIGN_CONTRACT.md').read_text().lower(), 'Missing shared waterline mask rule')
+require('widget' in (root/'docs/logs/NEXT_TURNS.md').read_text().lower(), 'Missing initial release widget scope')
 manifest = (root / 'app/src/main/AndroidManifest.xml').read_text()
 require('android.permission.INTERNET' not in manifest, 'Unexpected network permission')
 require('android:exported="true"' in manifest, 'No launch activity')
@@ -61,7 +61,7 @@ require('implementation(libs.datastore.preferences)' in appgradle, 'DataStore de
 require('repository.add(' in (pkg/'MainActivity.kt').read_text(), 'Real recording not wired')
 require('DrinkRules.loggedForDay' in (pkg/'MainActivity.kt').read_text(), 'Today logged volume not wired')
 require('onLogShortcut' in (pkg/'feature/home/HomeScreen.kt').read_text(), 'Home quick add missing')
-require('repo' in (root/'docs/PHASE3_ARCHITECTURE.md').read_text().lower(), 'Phase 3 data documentation missing')
+require('repo' in (root/'docs/logs/PHASE3_ARCHITECTURE.md').read_text().lower(), 'Phase 3 data documentation missing')
 require((root/'tools/verify_phase3.sh').exists(), 'Phase 3 smoke tests missing')
 
 if problems:

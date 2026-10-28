@@ -28,8 +28,8 @@ has('app/src/main/java/com/kmab/gulp/feature/home/HomeScreen.kt',
 has('app/src/main/java/com/kmab/gulp/core/navigation/GulpNav.kt',
     'fontSize = 11.5.sp', 'delay(1650)', 'NavGlyph(')
 has('app/build.gradle.kts', 'versionCode = 15', 'versionName = "0.7.0"')
-has('docs/DESIGN_CONTRACT.md', 'UI_FEEDBACK_AUDIT.md')
-has('docs/UI_FEEDBACK_AUDIT.md', 'True backdrop blur', 'Medical fluid plan')
+has('docs/logs/DESIGN_CONTRACT.md', 'UI_FEEDBACK_AUDIT.md')
+has('docs/logs/UI_FEEDBACK_AUDIT.md', 'True backdrop blur', 'Medical fluid plan')
 # No old package remnants or retired renderer should creep back into any source root.
 for source in (ROOT/'app/src').rglob('*.kt'):
     assert 'package app.gulp.android' not in source.read_text(), source

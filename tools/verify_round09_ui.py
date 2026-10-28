@@ -64,5 +64,5 @@ canonical = [i for i in ids if i not in {'leaf', 'soda', 'lemon'}]
 assert len(canonical) == len({geometry(i) for i in canonical}), 'duplicate icon shapes in palette'
 for hidden, visible in {'leaf':'tea','soda':'cup','lemon':'juice'}.items():
     assert geometry(hidden) == geometry(visible), f'{hidden} alias no longer matches {visible}'
-assert (ROOT/'docs/third_party/LUCIDE_ICONS_ISC.md').is_file()
+assert (ROOT/'docs/logs/third_party/LUCIDE_ICONS_ISC.md').is_file()
 print(f'PASS: {len(checks)} source checks and {len(ids)+2} vector resources')

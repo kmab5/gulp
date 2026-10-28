@@ -20,5 +20,5 @@ for name in ('/build-key','/build-key.*','/keystore.properties','.kotlin/','*.jk
     assert name in ignore, name
 ci=(ROOT/'.github/workflows/android-ci.yml').read_text()
 assert ':app:assembleDebug' in ci and ':app:assembleRelease' not in ci
-assert (ROOT/'docs/RELEASE_SIGNING.md').is_file()
+assert (ROOT/'docs/logs/RELEASE_SIGNING.md').is_file()
 print('PASS: package migration, Kotlin collision fix, release-signing and ignore contracts')
